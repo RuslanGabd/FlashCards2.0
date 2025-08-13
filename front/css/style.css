@@ -1,0 +1,268 @@
+:root {
+    --main-color: #2575fc;
+    --accent-color: #6a11cb;
+    --bg-light: #f9f9f9;
+    --text-dark: #333;
+    --text-light: #fff;
+    --spacing: 1.5rem;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+}
+
+body {
+    background: var(--bg-light);
+    color: var(--text-dark);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 960px;
+    margin: auto;
+    padding: 0 var(--spacing);
+}
+
+.navbar {
+    background: var(--main-color);
+    color: var(--text-light);
+    padding: var(--spacing);
+}
+
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar .logo {
+    font-size: 1.5rem;
+}
+
+.navbar .nav a {
+    color: white;
+    margin-left: 1rem;
+    text-decoration: none;
+}
+
+.hero {
+    background: linear-gradient(to right, var(--accent-color), var(--main-color));
+    color: white;
+    text-align: center;
+    padding: 4rem 1rem;
+}
+
+.hero h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.search-bar {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.search-bar input {
+    padding: 0.75rem;
+    width: 300px;
+    border: none;
+    border-radius: 4px;
+}
+
+.search-bar button {
+    padding: 0.75rem 1.5rem;
+    background: white;
+    color: var(--main-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.popular {
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.card-grid {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+}
+
+.card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    width: 260px;
+}
+
+.card button {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background: var(--main-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.how-it-works {
+    background: #fff;
+    padding: 3rem 1rem;
+}
+
+.steps {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+}
+
+.steps div {
+    text-align: center;
+    max-width: 200px;
+}
+
+.cta {
+    background: var(--main-color);
+    color: white;
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.cta .btn {
+    margin-top: 1rem;
+    padding: 0.75rem 2rem;
+    background: white;
+    color: var(--main-color);
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.footer {
+    background: #222;
+    color: white;
+    text-align: center;
+    padding: 1rem;
+}
+
+.footer a {
+    color: white;
+    margin: 0 1rem;
+    text-decoration: none;
+}
+
+.auth-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: linear-gradient(to right, var(--accent-color), var(--main-color));
+}
+
+.auth-box {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+}
+
+.auth-box h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.auth-box form {
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-box input {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.auth-box button {
+    padding: 0.75rem;
+    background: var(--main-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.small-text {
+    font-size: 0.9rem;
+    text-align: center;
+    margin-top: 1rem;
+}
+.flashcard-section {
+    padding: 2rem 1rem;
+    text-align: center;
+}
+
+.flashcard-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.flashcard {
+    perspective: 1000px;
+    width: 200px;
+    height: 150px;
+}
+
+.card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    cursor: pointer;
+}
+
+.flashcard:hover .card-inner {
+    transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    padding: 1rem;
+    border-radius: 10px;
+    background: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.card-front {
+    background: #2575fc;
+    color: white;
+}
+
+.card-back {
+    background: #f0f0f0;
+    color: #333;
+    transform: rotateY(180deg);
+}
