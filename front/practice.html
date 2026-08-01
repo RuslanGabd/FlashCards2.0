@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Practice - Words Up</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="study-mode-page">
+<header class="study-mode-topbar">
+    <a class="brand" href="index.html">Words Up</a>
+    <nav class="words-nav" aria-label="Practice navigation">
+        <a href="flashcards.html">Flashcards</a>
+        <a href="match.html">Match</a>
+        <a href="edit-set.html">Edit set</a>
+    </nav>
+</header>
+
+<main class="study-mode-shell">
+    <section class="study-mode-heading">
+        <div>
+            <p class="eyebrow">Practice mode</p>
+            <h1 id="practice-title">Practice</h1>
+        </div>
+        <p id="practice-progress">0 / 0</p>
+    </section>
+
+    <section class="practice-card" id="practice-card">
+        <p class="practice-question-label">Translate this term</p>
+        <h2 id="practice-question">Loading...</h2>
+        <div class="practice-answer" id="practice-answer" hidden></div>
+        <div class="practice-actions">
+            <button class="secondary-create-button" id="show-answer-button" type="button">Show answer</button>
+            <button class="primary-create-button" id="know-button" type="button">I know it</button>
+            <button class="secondary-create-button" id="again-button" type="button">Again</button>
+        </div>
+    </section>
+</main>
+
+<script src="js/study-data.js"></script>
+<script src="js/practice.js"></script>
+</body>
+</html>

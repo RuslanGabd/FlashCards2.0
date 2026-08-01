@@ -1,21 +1,28 @@
-<!-- Inside login.html, below form -->
-<div class="auth-box text-center mt-5" id="signup">
-    <h2>Create a free account</h2>
-    <form>
-        <div class="mb-3 text-start">
-            <label class="form-label">Name</label>
-            <input type="text" class="form-control" required />
-        </div>
-        <div class="mb-3 text-start">
-            <label class="form-label">Email</label>
-            <input type="email" class="form-control" required />
-        </div>
-        <div class="mb-3 text-start">
-            <label class="form-label">Password</label>
-            <input type="password" class="form-control" required />
-        </div>
-        <div class="d-grid">
-            <button type="submit" class="btn btn-success btn-lg">Sign Up</button>
-        </div>
-    </form>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up - Words Up</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<section class="auth-section">
+    <div class="auth-box">
+        <h2>Create a free account</h2>
+        <form id="signup-form">
+            <label>Username</label>
+            <input id="username" type="text" required />
+            <label>Email</label>
+            <input id="email" type="email" required />
+            <label>Password</label>
+            <input id="password" type="password" required />
+            <button type="submit">Sign Up</button>
+        </form>
+        <p id="auth-message" class="small-text"></p>
+        <p class="small-text">Already have an account? <a href="login.html">Log in</a></p>
+    </div>
+</section>
+<script src="js/auth.js"></script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 package card.flash.controller;
 
 
+import card.flash.dto.UserDto;
 import card.flash.entity.User;
 import card.flash.repository.UserRepository;
 import card.flash.security.JwtUtil;
@@ -16,7 +17,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:3001")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -41,10 +41,13 @@ public class AuthController {
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("Username already taken");
         }
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            return ResponseEntity.badRequest().body("Email already taken");
+        }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         User savedUser = userRepository.save(user);
-        return ResponseEntity.ok(savedUser);
+        return ResponseEntity.ok(UserDto.from(savedUser));
     }
 
     @PostMapping("/login")
@@ -58,6 +61,7 @@ public class AuthController {
         }
 
         UserDetails userDetails = userRepository.findByUsername(authRequest.username)
+                .or(() -> userRepository.findByEmail(authRequest.username))
                 .map(user -> org.springframework.security.core.userdetails.User
                         .withUsername(user.getUsername())
                         .password(user.getPassword())

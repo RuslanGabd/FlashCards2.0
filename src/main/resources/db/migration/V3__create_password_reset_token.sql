@@ -10,7 +10,7 @@ CREATE SEQUENCE prt_seq
 
 -- Create the password_reset_token table
 CREATE TABLE password_reset_token (
-                                      id BIGINT PRIMARY KEY DEFAULT nextval('prt_seq'),
+                                      id BIGINT DEFAULT nextval('prt_seq') PRIMARY KEY,
                                       token VARCHAR(255) NOT NULL UNIQUE,
                                       user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
                                       expiry_date TIMESTAMP NOT NULL

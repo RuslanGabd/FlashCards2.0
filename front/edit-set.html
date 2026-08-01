@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Set - Words Up</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="editor-page">
+<header class="editor-topbar">
+    <a class="back-link" href="index.html" aria-label="Back to set">
+        <span aria-hidden="true">&lsaquo;</span>
+        Back to set
+    </a>
+    <button class="done-button" id="done-button" type="button">Done</button>
+</header>
+
+<main class="editor-shell">
+    <section class="set-meta-panel" aria-label="Set details">
+        <div class="set-meta-heading">
+            <h1>Create a new flashcard set</h1>
+            <div class="set-create-actions">
+                <button class="secondary-create-button" id="create-button" type="button">Create</button>
+                <button class="primary-create-button" id="create-practice-button" type="button">Create and practice</button>
+            </div>
+        </div>
+
+        <button class="visibility-pill" id="visibility-button" type="button" aria-pressed="true">
+            <span aria-hidden="true">◎</span>
+            Public
+        </button>
+
+        <label class="set-meta-field">
+            <span class="visually-hidden">Title</span>
+            <input id="set-title" type="text" placeholder="Title" autocomplete="off" />
+        </label>
+
+        <label class="set-meta-field">
+            <span class="visually-hidden">Description</span>
+            <textarea id="set-description" rows="2" placeholder="Add a description..."></textarea>
+        </label>
+    </section>
+
+    <section class="editor-toolbar" aria-label="Set tools">
+        <div class="toolbar-group">
+            <button class="pill-button" id="import-button" type="button"><span aria-hidden="true">+</span> Import</button>
+            <button class="pill-button" id="diagram-button" type="button"><span aria-hidden="true">+</span> Add diagram</button>
+            <input id="diagram-input" type="file" accept="image/*" hidden />
+        </div>
+
+        <div class="toolbar-group toolbar-actions">
+            <label class="suggestions-toggle">
+                <span>Suggestions</span>
+                <input id="suggestions-toggle" type="checkbox" checked />
+                <span class="toggle-ui"></span>
+            </label>
+            <button class="round-button" id="search-button" type="button" aria-label="Search">⌕</button>
+            <button class="round-button" id="swap-button" type="button" aria-label="Swap">↔</button>
+            <button class="round-button" id="keyboard-button" type="button" aria-label="Keyboard">⌨</button>
+            <button class="round-button" id="delete-all-button" type="button" aria-label="Delete">⌫</button>
+        </div>
+    </section>
+
+    <section class="toolbar-panel" id="search-panel" hidden>
+        <label>
+            <span>Search cards</span>
+            <input id="card-search" type="search" placeholder="Type to filter terms or definitions" />
+        </label>
+    </section>
+
+    <section class="diagram-preview" id="diagram-preview" hidden aria-label="Diagram preview"></section>
+    <section class="editor-cards" id="editor-cards" aria-label="Flashcard editor"></section>
+
+    <section class="editor-bottom-actions" aria-label="Set actions">
+        <div class="add-card-actions">
+            <button class="add-card-button" id="add-card-button" type="button">Add a card</button>
+            <button class="add-card-button add-by-ai-button" id="add-by-ai-button" type="button">Add by AI</button>
+        </div>
+        <div class="bottom-create-actions">
+            <button class="secondary-create-button" data-create-action="create" type="button">Create</button>
+            <button class="primary-create-button" data-create-action="practice" type="button">Create and practice</button>
+        </div>
+    </section>
+</main>
+
+<dialog class="import-dialog" id="import-dialog">
+    <form method="dialog">
+        <div class="dialog-header">
+            <h2>Import cards</h2>
+            <button type="button" id="close-import" aria-label="Close">×</button>
+        </div>
+        <p>Paste one card per line. Separate term and definition with a tab, comma, semicolon, dash, or equals sign.</p>
+        <textarea id="import-text" rows="9" placeholder="accomplish - выполнять, достигать&#10;encourage - поощрять"></textarea>
+        <div class="dialog-actions">
+            <button class="secondary-button" type="button" id="cancel-import">Cancel</button>
+            <button class="primary-button" type="button" id="apply-import">Import cards</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog class="import-dialog" id="keyboard-dialog">
+    <form method="dialog">
+        <div class="dialog-header">
+            <h2>Keyboard shortcuts</h2>
+            <button type="button" id="close-keyboard" aria-label="Close">×</button>
+        </div>
+        <div class="shortcut-list">
+            <p><strong>Ctrl + Enter</strong><span>Save draft</span></p>
+            <p><strong>Ctrl + I</strong><span>Open import</span></p>
+            <p><strong>Ctrl + F</strong><span>Search cards</span></p>
+            <p><strong>Ctrl + Shift + S</strong><span>Swap terms and definitions</span></p>
+        </div>
+    </form>
+</dialog>
+
+<dialog class="import-dialog" id="add-ai-dialog">
+    <form method="dialog">
+        <div class="dialog-header">
+            <h2>Add cards by AI</h2>
+            <button type="button" id="close-add-ai" aria-label="Close">×</button>
+        </div>
+        <p>Paste any English text. DeepSeek will find useful words and add new flashcards to this set.</p>
+        <textarea id="add-ai-text" rows="9" placeholder="Paste text here..."></textarea>
+        <div class="dialog-actions">
+            <button class="secondary-button" type="button" id="cancel-add-ai">Cancel</button>
+            <button class="primary-button" type="button" id="apply-add-ai">Add cards</button>
+        </div>
+    </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="js/edit-set.js"></script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Words from Text - Words Up</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="words-page">
+<header class="words-header">
+    <a class="brand" href="index.html">Words Up</a>
+    <nav class="words-nav" aria-label="Words navigation">
+        <a href="index.html">Latest</a>
+        <a href="flashcards.html">Flashcards</a>
+        <a href="practice.html">Practice</a>
+        <a href="match.html">Match</a>
+        <a href="edit-set.html?new=1">Create set</a>
+    </nav>
+</header>
+
+<main class="words-layout">
+    <aside class="words-sidebar" aria-label="Text tools">
+        <a class="words-side-link" href="index.html">Back home</a>
+        <button class="words-side-button active" id="add-text-tab" type="button"><span>Add text</span></button>
+        <button class="words-side-button" id="my-texts-tab" type="button"><span>My texts</span></button>
+        <a class="words-side-link" href="#word-list"><span>My words</span></a>
+        <button class="words-side-button" id="clear-text-button" type="button">Clear</button>
+    </aside>
+
+    <section class="words-main">
+        <div class="words-titlebar">
+            <div>
+                <p class="eyebrow">Vocabulary builder</p>
+                <h1>Add text and learn every word</h1>
+            </div>
+            <button class="primary-create-button" id="send-to-cards-button" type="button">Send to flashcards</button>
+        </div>
+
+        <section class="text-loader-grid">
+            <article class="text-loader-card">
+                <h2>Load from URL</h2>
+                <label class="text-loader-field">
+                    <span class="visually-hidden">URL</span>
+                    <input id="text-url" type="url" placeholder="http://... or https://..." />
+                </label>
+                <button class="green-action-button" id="load-url-button" type="button">Add text</button>
+                <p>Works with pages that allow browser access. If a site blocks loading, paste the text below.</p>
+            </article>
+
+            <article class="text-loader-card">
+                <h2>Load file</h2>
+                <label class="file-drop">
+                    <input id="text-file" type="file" accept=".txt,.md,.csv,text/plain" />
+                    <span>Choose a .txt file</span>
+                </label>
+                <p id="file-name">No file chosen</p>
+            </article>
+
+            <article class="text-loader-card text-loader-card-wide">
+                <h2>Type or paste text</h2>
+                <input id="text-title" type="text" placeholder="Title (optional)" />
+                <textarea id="source-text" rows="10" placeholder="Paste English text here..."></textarea>
+                <div class="text-loader-actions">
+                    <button class="green-action-button" id="analyze-text-button" type="button">Get words</button>
+                    <button class="secondary-create-button" id="sample-text-button" type="button">Use sample</button>
+                </div>
+            </article>
+        </section>
+
+        <section class="words-results" id="word-list" hidden>
+            <div class="words-list-panel">
+                <div class="words-tabs" aria-label="Word status filter">
+                    <button class="active" data-status-filter="all" type="button">All</button>
+                    <button data-status-filter="new" type="button">New</button>
+                    <button data-status-filter="study" type="button">To study</button>
+                    <button data-status-filter="known" type="button">Known</button>
+                </div>
+                <div class="word-list" id="words-container"></div>
+            </div>
+
+            <aside class="words-settings-panel">
+                <h2>Words</h2>
+                <p class="words-total" id="words-total">0 words</p>
+                <div class="words-stat-bar" aria-label="Word status summary">
+                    <span class="new" id="new-count">0</span>
+                    <span class="study" id="study-count">0</span>
+                    <span class="known" id="known-count">0</span>
+                </div>
+
+                <label class="settings-field">
+                    <span>Search word</span>
+                    <input id="word-search" type="search" placeholder="Search word..." />
+                </label>
+
+                <label class="settings-field">
+                    <span>Sorting</span>
+                    <select id="sort-words">
+                        <option value="frequency">By frequency in text</option>
+                        <option value="alphabet">Alphabetically</option>
+                        <option value="length">By word length</option>
+                    </select>
+                </label>
+
+                <label class="settings-field">
+                    <span>Status</span>
+                    <select id="status-select">
+                        <option value="all">All</option>
+                        <option value="new">New</option>
+                        <option value="study">To study</option>
+                        <option value="known">Known</option>
+                    </select>
+                </label>
+
+                <button class="translate-missing-button" id="translate-missing-button" type="button">Get dictionary translations</button>
+            </aside>
+        </section>
+
+        <section class="my-texts-panel" id="my-texts-panel" hidden>
+            <div class="my-texts-heading">
+                <div>
+                    <p class="eyebrow">Saved texts</p>
+                    <h2>My texts</h2>
+                </div>
+                <button class="secondary-create-button" id="clear-texts-button" type="button">Clear all</button>
+            </div>
+            <div class="my-texts-list" id="my-texts-list"></div>
+        </section>
+    </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script src="js/words-from-text.js"></script>
+</body>
+</html>

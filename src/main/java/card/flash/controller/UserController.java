@@ -1,5 +1,6 @@
 package card.flash.controller;
 
+import card.flash.dto.UserDto;
 import card.flash.entity.User;
 import card.flash.service.UserService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,8 +19,9 @@ public class UserController {
     }
 
     @GetMapping("/{username}")
-    public User getUserByUsername(@PathVariable String username) {
-        return userService.findByUsername(username)
+    public UserDto getUserByUsername(@PathVariable String username) {
+        User user = userService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        return UserDto.from(user);
     }
 }

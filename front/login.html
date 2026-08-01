@@ -10,15 +10,17 @@
 <section class="auth-section">
     <div class="auth-box">
         <h2>Login to Words Up</h2>
-        <form>
-            <label>Email</label>
-            <input type="email" required />
+        <form id="login-form">
+            <label>Username or email</label>
+            <input id="username" type="text" required />
             <label>Password</label>
-            <input type="password" required />
+            <input id="password" type="password" required />
             <button type="submit">Log In</button>
         </form>
-        <p class="small-text">Don't have an account? <a href="#">Sign up</a></p>
+        <p id="auth-message" class="small-text"></p>
+        <p class="small-text">Don't have an account? <a href="signup.html">Sign up</a></p>
     </div>
 </section>
+<script src="js/auth.js"></script>
 </body>
 </html>

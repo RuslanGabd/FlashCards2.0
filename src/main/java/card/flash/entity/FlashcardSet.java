@@ -35,11 +35,10 @@ public class FlashcardSet {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
+
+    @Builder.Default
     @OneToMany(mappedBy = "set", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Flashcard> cards = new ArrayList<>();
-
-    @OneToMany(mappedBy = "set", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Flashcard> flashcards = new ArrayList<>();
 
     @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;

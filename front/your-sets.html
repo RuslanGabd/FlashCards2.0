@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Study Sets - Words Up</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="latest-page">
+<header class="latest-topbar">
+    <a class="brand" href="index.html">Words Up</a>
+    <label class="top-search" aria-label="Search">
+        <span aria-hidden="true">⌕</span>
+        <input id="sets-search" type="search" placeholder="Search your study sets" />
+    </label>
+    <nav class="top-actions" aria-label="Primary navigation">
+        <a href="edit-set.html?new=1">Create</a>
+        <a href="login.html">Log in</a>
+        <a class="signup-action" href="signup.html">Sign up</a>
+    </nav>
+</header>
+
+<div class="latest-layout">
+    <aside class="latest-sidebar" aria-label="Dashboard navigation">
+        <nav class="side-nav">
+            <a href="index.html"><span aria-hidden="true">⌂</span> Home</a>
+            <a href="index.html"><span aria-hidden="true">◴</span> Latest Activity</a>
+            <a class="active" href="your-sets.html"><span aria-hidden="true">▣</span> Your Study Sets</a>
+            <a href="words-from-text.html"><span aria-hidden="true">≡</span> Words from text</a>
+            <a href="#"><span aria-hidden="true">⚙</span> Settings</a>
+        </nav>
+    </aside>
+
+    <main class="latest-main">
+        <section class="latest-heading">
+            <div>
+                <p class="eyebrow">Library</p>
+                <h1>Your Study Sets</h1>
+            </div>
+            <a class="create-set-link" href="edit-set.html?new=1">Create a set</a>
+        </section>
+
+        <section class="activity-section">
+            <h2>Drafts</h2>
+            <div id="draft-sets-container" class="activity-list"></div>
+        </section>
+
+        <section class="activity-section">
+            <h2>Available sets</h2>
+            <div id="saved-sets-container" class="activity-list">
+                <article class="activity-item loading-item">
+                    <div class="set-thumb">WU</div>
+                    <div>
+                        <p class="set-meta">Loading sets</p>
+                        <h3>Finding your study material...</h3>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script src="js/your-sets.js"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Match - Words Up</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="study-mode-page">
+<header class="study-mode-topbar">
+    <a class="brand" href="index.html">Words Up</a>
+    <nav class="words-nav" aria-label="Match navigation">
+        <a href="flashcards.html">Flashcards</a>
+        <a href="practice.html">Practice</a>
+        <a href="edit-set.html">Edit set</a>
+    </nav>
+</header>
+
+<main class="study-mode-shell">
+    <section class="study-mode-heading">
+        <div>
+            <p class="eyebrow">Match mode</p>
+            <h1 id="match-title">Match terms with definitions</h1>
+        </div>
+        <p id="match-score">0 matched</p>
+    </section>
+
+    <section class="match-board" id="match-board" aria-label="Match cards"></section>
+    <div class="match-actions">
+        <button class="secondary-create-button" id="reset-match-button" type="button">Shuffle again</button>
+        <a class="primary-create-button match-edit-link" href="edit-set.html">Edit cards</a>
+    </div>
+</main>
+
+<script src="js/study-data.js"></script>
+<script src="js/match.js"></script>
+</body>
+</html>

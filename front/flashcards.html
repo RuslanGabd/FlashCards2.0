@@ -3,66 +3,207 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Flashcards – Words Up</title>
+    <title>Flashcards - Words Up</title>
     <link rel="stylesheet" href="css/style.css" />
 </head>
-<body>
+<body class="flash-study-page">
+<main class="flash-study-shell">
+    <section class="mode-grid" aria-label="Study modes">
+        <a class="mode-tile active" href="flashcards.html"><span aria-hidden="true">▣</span> Flashcards</a>
+        <a class="mode-tile" href="practice.html"><span aria-hidden="true">◌</span> Learn</a>
+        <a class="mode-tile" href="practice.html"><span aria-hidden="true">▤</span> Test</a>
+        <a class="mode-tile" href="match.html"><span aria-hidden="true">▦</span> Blocks</a>
+        <a class="mode-tile" href="practice.html"><span aria-hidden="true">◆</span> Blast</a>
+        <a class="mode-tile" href="match.html"><span aria-hidden="true">▰</span> Match</a>
+    </section>
 
-<header class="navbar">
-    <div class="container">
-        <h1 class="logo">Words Up</h1>
-        <nav class="nav">
-            <a href="index.html">Home</a>
-            <a href="#">My Sets</a>
-            <a href="#">Login</a>
-        </nav>
+    <div class="mode-dots" aria-hidden="true">
+        <span class="active"></span>
+        <span></span>
     </div>
-</header>
 
-<main class="flashcard-section">
-    <div class="container">
-        <h2>Flashcards: Basic English → Russian</h2>
-        <div class="flashcard-grid">
-            <!-- Flashcard 1 -->
-            <div class="flashcard">
-                <div class="card-inner">
-                    <div class="card-front">
-                        <p>Hello</p>
-                    </div>
-                    <div class="card-back">
-                        <p>Привет</p>
-                    </div>
+    <div class="flash-study-layout">
+        <section class="flash-study-card" id="flash-study-card" tabindex="0" aria-label="Flashcard">
+            <div class="flash-card-topline">
+                <button class="hint-button" id="hint-button" type="button">♡ Get a hint</button>
+                <div class="flash-card-tools">
+                    <label class="accent-select-label" for="accent-select">
+                        <span class="sr-only">Pronunciation accent</span>
+                        <select id="accent-select" aria-label="Pronunciation accent">
+                            <option value="us">US</option>
+                            <option value="uk">UK</option>
+                        </select>
+                    </label>
+                    <button id="speak-button" type="button" aria-label="Listen pronunciation" title="Listen pronunciation">&#128266;</button>
+                    <button id="favorite-button" type="button" aria-label="Favorite">★</button>
                 </div>
             </div>
+            <p class="flash-card-face" id="flash-card-face">Loading...</p>
+            <p class="flash-card-hint" id="flash-card-hint" hidden></p>
+        </section>
 
-            <!-- Flashcard 2 -->
-            <div class="flashcard">
-                <div class="card-inner">
-                    <div class="card-front">
-                        <p>Thank you</p>
-                    </div>
-                    <div class="card-back">
-                        <p>Спасибо</p>
-                    </div>
+        <aside class="study-timer-panel" aria-label="Study timers">
+            <section class="timer-widget">
+                <p>Elapsed time</p>
+                <strong id="elapsed-time-display">00:00:00</strong>
+                <div class="timer-actions">
+                    <button id="elapsed-start-button" type="button">Start</button>
+                    <button id="elapsed-reset-button" type="button">Reset</button>
                 </div>
-            </div>
+            </section>
 
-            <!-- Flashcard 3 -->
-            <div class="flashcard">
-                <div class="card-inner">
-                    <div class="card-front">
-                        <p>Goodbye</p>
-                    </div>
-                    <div class="card-back">
-                        <p>До свидания</p>
-                    </div>
+            <section class="timer-widget">
+                <p>Countdown</p>
+                <strong id="countdown-display">00:00</strong>
+                <div class="countdown-inputs">
+                    <label>
+                        <span>Min</span>
+                        <input id="countdown-minutes" type="number" min="0" max="999" value="5" />
+                    </label>
+                    <label>
+                        <span>Sec</span>
+                        <input id="countdown-seconds" type="number" min="0" max="59" value="0" />
+                    </label>
                 </div>
-            </div>
+                <div class="timer-actions">
+                    <button id="countdown-start-button" type="button">Start</button>
+                    <button id="countdown-reset-button" type="button">Reset</button>
+                </div>
+            </section>
+        </aside>
+    </div>
 
-            <!-- Add more cards as needed -->
+    <section class="flash-controls" aria-label="Flashcard controls">
+        <label class="track-toggle">
+            <span>Track progress</span>
+            <input id="track-progress-toggle" type="checkbox" />
+            <span class="mini-toggle-ui"></span>
+        </label>
+        <div class="flash-nav-controls">
+            <button class="spark-button" id="flip-card-button" type="button" aria-label="Flip card">✦</button>
+            <button class="previous-flash-button" id="previous-card-button" type="button" aria-label="Previous card">←</button>
+            <span id="flash-counter">0 / 0</span>
+            <button class="next-flash-button" id="next-card-button" type="button" aria-label="Next card">→</button>
         </div>
-    </div>
+        <div class="flash-extra-controls">
+            <button id="play-button" type="button" aria-label="Play">▶</button>
+            <button id="shuffle-button" type="button" aria-label="Shuffle">⇄</button>
+            <button id="settings-button" type="button" aria-label="Settings">⚙</button>
+            <button id="fullscreen-button" type="button" aria-label="Fullscreen">⛶</button>
+        </div>
+    </section>
+
+    <section class="flash-empty-state" id="flash-empty-state" hidden>
+        <h1>No cards yet</h1>
+        <p>Create a set first, then come back to study it.</p>
+        <a class="primary-create-button" href="edit-set.html?new=1">Create cards</a>
+    </section>
 </main>
 
+<dialog class="flash-options-dialog" id="flash-options-dialog">
+    <div class="flash-options-panel">
+        <button class="options-close-button" id="close-options-button" type="button" aria-label="Close options">×</button>
+        <h1>Options</h1>
+
+        <section class="option-row">
+            <div>
+                <h2>Track progress</h2>
+                <p>Sort your flashcards to keep track of what you know and what you're still learning.</p>
+            </div>
+            <label class="option-switch">
+                <input id="settings-track-progress" type="checkbox" />
+                <span></span>
+            </label>
+        </section>
+
+        <section class="option-row">
+            <h2>Study starred terms only</h2>
+            <label class="option-switch">
+                <input id="starred-only-toggle" type="checkbox" />
+                <span></span>
+            </label>
+        </section>
+
+        <section class="option-row">
+            <h2>Front</h2>
+            <select class="option-pill-select" id="front-side-select">
+                <option value="term">English</option>
+                <option value="definition">Russian</option>
+            </select>
+        </section>
+
+        <section class="options-section">
+            <button class="options-section-title" id="keyboard-toggle" type="button">
+                <span>Keyboard shortcuts</span>
+                <strong>Hide ^</strong>
+            </button>
+            <div class="shortcut-grid" id="keyboard-shortcuts">
+                <div><span>Previous</span><kbd>←</kbd></div>
+                <div><span>Shuffle</span><kbd>H</kbd></div>
+                <div><span>Next</span><kbd>→</kbd></div>
+                <div><span>Audio</span><kbd>A</kbd></div>
+                <div><span>Play</span><kbd>P</kbd></div>
+                <div><span>Answer with term</span><kbd>T</kbd></div>
+                <div><span>Flip</span><kbd>Space</kbd></div>
+                <div><span>Answer with definition</span><kbd>D</kbd></div>
+                <div><span>Star</span><kbd>S</kbd></div>
+                <div><span>Edit</span><kbd>E</kbd></div>
+            </div>
+        </section>
+
+        <section class="option-row">
+            <h2>Text to speech</h2>
+            <label class="option-switch">
+                <input id="tts-toggle" type="checkbox" checked />
+                <span></span>
+            </label>
+        </section>
+
+        <section class="options-section">
+            <button class="options-section-title" id="advanced-tts-toggle" type="button">
+                <span>Advanced text to speech</span>
+                <strong>Hide ^</strong>
+            </button>
+            <div id="advanced-tts-options">
+                <section class="option-row nested">
+                    <h2>English text to speech</h2>
+                    <label class="option-switch">
+                        <input id="english-tts-toggle" type="checkbox" checked />
+                        <span></span>
+                    </label>
+                </section>
+                <section class="option-row nested">
+                    <h2>English text to speech speed</h2>
+                    <select class="option-pill-select" id="english-speed-select">
+                        <option value="0.75">Slow</option>
+                        <option value="0.9" selected>Normal</option>
+                        <option value="1.1">Fast</option>
+                    </select>
+                </section>
+                <section class="option-row nested">
+                    <h2>Russian text to speech</h2>
+                    <label class="option-switch">
+                        <input id="russian-tts-toggle" type="checkbox" checked />
+                        <span></span>
+                    </label>
+                </section>
+                <section class="option-row nested">
+                    <h2>Russian text to speech speed</h2>
+                    <select class="option-pill-select" id="russian-speed-select">
+                        <option value="0.75">Slow</option>
+                        <option value="0.9" selected>Normal</option>
+                        <option value="1.1">Fast</option>
+                    </select>
+                </section>
+            </div>
+        </section>
+
+        <button class="restart-flashcards-button" id="restart-flashcards-button" type="button">Restart Flashcards</button>
+        <button class="privacy-button" id="privacy-button" type="button">Privacy Policy</button>
+    </div>
+</dialog>
+
+<script src="js/study-data.js"></script>
+<script src="js/flashcards.js"></script>
 </body>
 </html>

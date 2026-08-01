@@ -3,43 +3,129 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Words Up – Learn Vocabulary</title>
+    <title>Latest Activity - Words Up</title>
     <link rel="stylesheet" href="css/style.css"/>
 </head>
-<body>
-<!-- Header -->
-<header class="navbar">
-    <div class="container">
-        <h1 class="logo">Words Up</h1>
-        <nav class="nav">
-            <a href="#">Learn</a>
-            <a href="#">Create Set</a>
-            <a href="login.html">Login</a>
-            <a href="#">Sign Up</a>
-        </nav>
-    </div>
+<body class="latest-page">
+<header class="latest-topbar">
+    <a class="brand" href="index.html">Words Up</a>
+    <label class="top-search" aria-label="Search">
+        <span aria-hidden="true">⌕</span>
+        <input type="search" placeholder="Search sets, terms, or people"/>
+    </label>
+    <nav class="top-actions" aria-label="Primary navigation">
+        <a href="edit-set.html?new=1">Create</a>
+        <a href="login.html">Log in</a>
+        <a class="signup-action" href="signup.html">Sign up</a>
+    </nav>
 </header>
 
-<!-- Hero -->
-<section class="hero">
-    <div class="container">
-        <h2>Learn foreign words easily</h2>
-        <p>Create your own flashcards and study every day — fast and with fun.</p>
-        <div class="search-bar">
-            <input type="text" placeholder="Search word sets..."/>
-            <button>Search</button>
-        </div>
-    </div>
-</section>
+<div class="latest-layout">
+    <aside class="latest-sidebar" aria-label="Dashboard navigation">
+        <nav class="side-nav">
+            <a href="#"><span aria-hidden="true">⌂</span> Home</a>
+            <a class="active" href="index.html"><span aria-hidden="true">◴</span> Latest Activity</a>
+            <a href="your-sets.html"><span aria-hidden="true">▣</span> Your Study Sets</a>
+            <a href="words-from-text.html"><span aria-hidden="true">≡</span> Words from text</a>
+            <a href="#"><span aria-hidden="true">⚙</span> Settings</a>
+        </nav>
 
-<!-- Popular Sets -->
-<section class="popular">
-    <div class="container">
-        <h2>Popular Sets</h2>
-        <div id="sets-container" class="card-grid">
-            <!-- Cards will be injected here -->
+        <section class="side-section">
+            <p>Your Classes</p>
+            <a href="#">English A1</a>
+            <a href="#">French Practice</a>
+            <a href="#">Join or create a class</a>
+        </section>
+
+        <section class="side-section">
+            <p>Your Folders</p>
+            <a href="#">Daily words</a>
+            <a href="#">Travel phrases</a>
+            <a href="#">Create a folder</a>
+        </section>
+    </aside>
+
+    <main class="latest-main">
+        <section class="latest-heading">
+            <div>
+                <p class="eyebrow">Study dashboard</p>
+                <h1>Latest Activity</h1>
+            </div>
+            <label class="filter-search">
+                <span>Search</span>
+                <input type="search" placeholder="Filter sets"/>
+            </label>
+        </section>
+
+        <section class="quick-create" aria-label="Quick create">
+            <article>
+                <button type="button" aria-label="Close">×</button>
+                <h2>Create a study set</h2>
+                <p>Create a set for any subject you're learning.</p>
+                <a href="edit-set.html?new=1">Create a study set</a>
+            </article>
+            <article>
+                <button type="button" aria-label="Close">×</button>
+                <h2>Build your library</h2>
+                <p>Keep your public and private sets organized.</p>
+                <a href="edit-set.html?new=1">Add cards</a>
+            </article>
+            <article>
+                <button type="button" aria-label="Close">×</button>
+                <h2>Create set by AI</h2>
+                <p>Paste any text and generate flashcards automatically.</p>
+                <button class="quick-create-action" id="open-ai-create-button" type="button">Create set by AI</button>
+            </article>
+        </section>
+
+        <section class="activity-section">
+            <h2>A few seconds ago</h2>
+            <div id="sets-container" class="activity-list">
+                <article class="activity-item loading-item">
+                    <div class="set-thumb">WU</div>
+                    <div>
+                        <p class="set-meta">Loading public sets</p>
+                        <h3>Finding your latest study material...</h3>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="activity-section">
+            <h2>Start here</h2>
+            <div class="study-tools">
+                <a href="flashcards.html">Flashcards</a>
+                <a href="practice.html">Practice</a>
+                <a href="words-from-text.html">Words from text</a>
+                <a href="match.html">Match</a>
+            </div>
+        </section>
+    </main>
+</div>
+
+<dialog class="ai-create-dialog" id="ai-create-dialog">
+    <form method="dialog">
+        <div class="dialog-header">
+            <h2>Create set by AI</h2>
+            <button type="button" id="close-ai-create" aria-label="Close">×</button>
         </div>
-    </div>
-</section>
+        <p>Paste any English text. For now Words Up will generate cards locally; later this flow will use DeepSeek when you add the API key.</p>
+        <label class="ai-create-title-field">
+            <span>Title</span>
+            <input id="ai-set-title" type="text" placeholder="AI vocabulary set" />
+        </label>
+        <label class="ai-create-text-field">
+            <span>Text</span>
+            <textarea id="ai-source-text" rows="10" placeholder="Paste text here..."></textarea>
+        </label>
+        <div class="dialog-actions">
+            <button class="secondary-button" id="cancel-ai-create" type="button">Cancel</button>
+            <button class="primary-button" id="generate-ai-set" type="button">Generate cards</button>
+        </div>
+    </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <script src="js/index.js"></script>
 </body>
+</html>

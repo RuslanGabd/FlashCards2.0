@@ -7,6 +7,7 @@ import card.flash.entity.User;
 import card.flash.mapper.FlashcardSetMapper;
 import card.flash.service.FlashcardSetService;
 import card.flash.service.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -47,13 +48,24 @@ public class FlashcardSetController {
         return ResponseEntity.ok(dtoList);
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<List<FlashcardSetDto>> getMySets(@AuthenticationPrincipal UserDetails userDetails) {
+        User owner = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        List<FlashcardSetDto> dtoList = flashcardSetService.getSetsByOwner(owner).stream()
+                .map(FlashcardSetMapper::toDto)
+                .toList();
+
+        return ResponseEntity.ok(dtoList);
+    }
+
     /** GET /api/sets/user/{username} → All sets owned by this username */
     @GetMapping("/user/{username}")
     public ResponseEntity<?> getSetsByUser(@PathVariable String username) {
         User owner = userService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         List<FlashcardSet> sets = flashcardSetService.getSetsByOwner(owner);
-        return ResponseEntity.ok(sets);
+        return ResponseEntity.ok(sets.stream().map(FlashcardSetMapper::toDto).toList());
     }
 
     /** POST /api/sets → Create a new set.
@@ -61,8 +73,8 @@ public class FlashcardSetController {
      */
 
     @PostMapping
-    public ResponseEntity<?> createSet(@RequestBody FlashcardSet set,
-                                       @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<FlashcardSetDto> createSet(@RequestBody FlashcardSet set,
+                                                     @AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();
         User owner = userService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -76,7 +88,38 @@ public class FlashcardSetController {
         }
 
         FlashcardSet saved = flashcardSetService.save(set);
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(FlashcardSetMapper.toDto(saved));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateSet(@PathVariable Long id,
+                                       @RequestBody FlashcardSet incomingSet,
+                                       @AuthenticationPrincipal UserDetails userDetails) {
+        FlashcardSet existingSet = flashcardSetService.getById(id)
+                .orElse(null);
+        if (existingSet == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String username = userDetails.getUsername();
+        if (existingSet.getOwner() == null || !username.equals(existingSet.getOwner().getUsername())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can edit only your own sets");
+        }
+
+        existingSet.setTitle(incomingSet.getTitle());
+        existingSet.setDescription(incomingSet.getDescription());
+        existingSet.setPublic(incomingSet.isPublic());
+        existingSet.getCards().clear();
+
+        if (incomingSet.getCards() != null) {
+            for (Flashcard card : incomingSet.getCards()) {
+                card.setSet(existingSet);
+                existingSet.getCards().add(card);
+            }
+        }
+
+        FlashcardSet saved = flashcardSetService.save(existingSet);
+        return ResponseEntity.ok(FlashcardSetMapper.toDto(saved));
     }
 
 

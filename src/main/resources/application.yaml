@@ -24,3 +24,17 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+
+yandex:
+  dictionary:
+    api-key: ${YANDEX_DICTIONARY_API_KEY:dict.1.1.20260730T105924Z.250aa70183d46d0a.232968128c1d7b15da1cbacf354187ed7d7835ca}
+    lookup-url: https://dictionary.yandex.net/api/v1/dicservice.json/lookup
+
+deepseek:
+  api-key: ${DEEPSEEK_API_KEY:sk-f21a69cbd5914427adaf451cc521678e}
+  chat-url: https://api.deepseek.com/chat/completions
+  model: deepseek-chat
+
+forvo:
+  api-key: ${FORVO_API_KEY:0a0c7d3423137ba3a93106300b50224b}
+  api-base-url: https://apifree.forvo.com

@@ -4,7 +4,6 @@ import card.flash.entity.PasswordResetToken;
 import card.flash.entity.User;
 import card.flash.repository.PasswordResetTokenRepository;
 import card.flash.repository.UserRepository;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,6 +20,7 @@ public class PasswordService {
 
     public String createResetToken(String usernameOrEmail) {
         User user = userRepo.findByUsername(usernameOrEmail)
+                .or(() -> userRepo.findByEmail(usernameOrEmail))
                 .orElseThrow(() -> new RuntimeException("User not found"));
         String token = UUID.randomUUID().toString();
         var prt = new PasswordResetToken();
