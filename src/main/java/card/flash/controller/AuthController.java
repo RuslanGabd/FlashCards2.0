@@ -2,6 +2,7 @@ package card.flash.controller;
 
 
 import card.flash.dto.UserDto;
+import card.flash.dto.SignupRequest;
 import card.flash.entity.User;
 import card.flash.repository.UserRepository;
 import card.flash.security.JwtUtil;
@@ -37,15 +38,18 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@RequestBody User user) {
-        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+    public ResponseEntity<?> registerUser(@RequestBody SignupRequest request) {
+        if (userRepository.findByUsername(request.username()).isPresent()) {
             return ResponseEntity.badRequest().body("Username already taken");
         }
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+        if (userRepository.findByEmail(request.email()).isPresent()) {
             return ResponseEntity.badRequest().body("Email already taken");
         }
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        User user = new User();
+        user.setUsername(request.username());
+        user.setEmail(request.email());
+        user.setPassword(passwordEncoder.encode(request.password()));
         User savedUser = userRepository.save(user);
         return ResponseEntity.ok(UserDto.from(savedUser));
     }

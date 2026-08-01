@@ -351,7 +351,10 @@ async function lookupDictionaryTranslations(wordItems, options = {}) {
 async function requestDictionaryItems(wordList) {
     const response = await fetch(DICTIONARY_LOOKUP_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+        },
         body: JSON.stringify({ words: wordList }),
     });
 

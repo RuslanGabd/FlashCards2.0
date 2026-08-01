@@ -1,6 +1,7 @@
 package card.flash.security;
 
 import org.springframework.context.annotation.*;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -20,8 +21,11 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
-    public SecurityConfig(JwtFilter jwtFilter) {
+    private final ExternalApiRateLimitFilter externalApiRateLimitFilter;
+
+    public SecurityConfig(JwtFilter jwtFilter, ExternalApiRateLimitFilter externalApiRateLimitFilter) {
         this.jwtFilter = jwtFilter;
+        this.externalApiRateLimitFilter = externalApiRateLimitFilter;
     }
 
     @Bean
@@ -43,9 +47,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/flashcards/set/**").permitAll()
                         .requestMatchers("/api/sets/**").authenticated()
                         .requestMatchers("/api/flashcards/**").authenticated()
+                        .requestMatchers("/api/ai/**", "/api/dictionary/**", "/api/pronunciation/**").authenticated()
                         .anyRequest().permitAll()
                 )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(externalApiRateLimitFilter, JwtFilter.class);
 
         return http.build();
     }
@@ -83,5 +89,14 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public FilterRegistrationBean<ExternalApiRateLimitFilter> externalApiRateLimitFilterRegistration(
+            ExternalApiRateLimitFilter filter
+    ) {
+        FilterRegistrationBean<ExternalApiRateLimitFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 }

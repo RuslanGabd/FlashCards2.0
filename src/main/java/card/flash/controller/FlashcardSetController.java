@@ -4,6 +4,8 @@ package card.flash.controller;
 import card.flash.entity.Flashcard;
 import card.flash.entity.FlashcardSet;
 import card.flash.entity.User;
+import card.flash.dto.FlashcardRequest;
+import card.flash.dto.FlashcardSetRequest;
 import card.flash.mapper.FlashcardSetMapper;
 import card.flash.service.FlashcardSetService;
 import card.flash.service.UserService;
@@ -73,19 +75,15 @@ public class FlashcardSetController {
      */
 
     @PostMapping
-    public ResponseEntity<FlashcardSetDto> createSet(@RequestBody FlashcardSet set,
+    public ResponseEntity<FlashcardSetDto> createSet(@RequestBody FlashcardSetRequest request,
                                                      @AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();
         User owner = userService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        FlashcardSet set = new FlashcardSet();
+        applyRequest(set, request);
         set.setOwner(owner);
-
-        if (set.getCards() != null) {
-            for (Flashcard card : set.getCards()) {
-                card.setSet(set);
-            }
-        }
 
         FlashcardSet saved = flashcardSetService.save(set);
         return ResponseEntity.ok(FlashcardSetMapper.toDto(saved));
@@ -93,7 +91,7 @@ public class FlashcardSetController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateSet(@PathVariable Long id,
-                                       @RequestBody FlashcardSet incomingSet,
+                                       @RequestBody FlashcardSetRequest request,
                                        @AuthenticationPrincipal UserDetails userDetails) {
         FlashcardSet existingSet = flashcardSetService.getById(id)
                 .orElse(null);
@@ -106,17 +104,7 @@ public class FlashcardSetController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can edit only your own sets");
         }
 
-        existingSet.setTitle(incomingSet.getTitle());
-        existingSet.setDescription(incomingSet.getDescription());
-        existingSet.setPublic(incomingSet.isPublic());
-        existingSet.getCards().clear();
-
-        if (incomingSet.getCards() != null) {
-            for (Flashcard card : incomingSet.getCards()) {
-                card.setSet(existingSet);
-                existingSet.getCards().add(card);
-            }
-        }
+        applyRequest(existingSet, request);
 
         FlashcardSet saved = flashcardSetService.save(existingSet);
         return ResponseEntity.ok(FlashcardSetMapper.toDto(saved));
@@ -129,5 +117,24 @@ public class FlashcardSetController {
     public ResponseEntity<?> deleteSet(@PathVariable Long id) {
         flashcardSetService.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private void applyRequest(FlashcardSet set, FlashcardSetRequest request) {
+        set.setTitle(request.title());
+        set.setDescription(request.description());
+        set.setPublic(request.publicSet());
+        set.getCards().clear();
+
+        if (request.cards() == null) {
+            return;
+        }
+
+        for (FlashcardRequest cardRequest : request.cards()) {
+            Flashcard card = new Flashcard();
+            card.setTerm(cardRequest.term());
+            card.setDefinition(cardRequest.definition());
+            card.setSet(set);
+            set.getCards().add(card);
+        }
     }
 }

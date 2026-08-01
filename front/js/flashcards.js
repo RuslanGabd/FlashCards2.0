@@ -637,7 +637,9 @@ async function getForvoAudioUrl(word, language, accent) {
         if (accent) {
             url.searchParams.set("accent", accent);
         }
-        const response = await fetch(url.toString());
+        const response = await fetch(url.toString(), {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+        });
         if (!response.ok) {
             pronunciationCache.set(cacheKey, null);
             return null;

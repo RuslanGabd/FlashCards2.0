@@ -3,6 +3,7 @@ package card.flash.controller;
 import card.flash.dto.AiSetGenerationRequest;
 import card.flash.dto.AiSetGenerationResponse;
 import card.flash.service.DeepSeekAiSetService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +20,7 @@ public class AiSetController {
     }
 
     @PostMapping("/create-set")
-    public AiSetGenerationResponse createSet(@RequestBody AiSetGenerationRequest request) {
+    public AiSetGenerationResponse createSet(@Valid @RequestBody AiSetGenerationRequest request) {
         return deepSeekAiSetService.generateSet(request);
     }
 }

@@ -453,7 +453,10 @@ async function handlePracticeCreate() {
 async function generateCardsByAi(text) {
     const response = await fetch(AI_CREATE_SET_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getAuthToken()}`,
+        },
         body: JSON.stringify({
             title: setTitle.value.trim() || "AI vocabulary set",
             text,
@@ -592,7 +595,10 @@ async function getDefinitionSuggestions(term) {
     try {
         const response = await fetch(DICTIONARY_LOOKUP_URL, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${getAuthToken()}`,
+            },
             body: JSON.stringify({ words: [term], lang: "en-ru" }),
         });
         if (!response.ok) throw new Error("Dictionary lookup failed");
@@ -639,7 +645,10 @@ async function getTermSuggestionsFromDefinition(definition) {
     try {
         const response = await fetch(DICTIONARY_LOOKUP_URL, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${getAuthToken()}`,
+            },
             body: JSON.stringify({ words: [normalized], lang: "ru-en" }),
         });
         if (!response.ok) throw new Error("Reverse dictionary lookup failed");
