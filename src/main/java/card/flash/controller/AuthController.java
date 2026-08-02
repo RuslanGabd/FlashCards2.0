@@ -1,12 +1,14 @@
 package card.flash.controller;
 
 
-import card.flash.dto.UserDto;
-import card.flash.dto.SignupRequest;
+import card.flash.dto.*;
 import card.flash.entity.User;
+import card.flash.exception.ConflictException;
+import card.flash.exception.ResourceNotFoundException;
 import card.flash.repository.UserRepository;
 import card.flash.security.JwtUtil;
 import card.flash.service.PasswordService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -38,12 +40,12 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@RequestBody SignupRequest request) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest request) {
         if (userRepository.findByUsername(request.username()).isPresent()) {
-            return ResponseEntity.badRequest().body("Username already taken");
+            throw new ConflictException("Username already taken");
         }
         if (userRepository.findByEmail(request.email()).isPresent()) {
-            return ResponseEntity.badRequest().body("Email already taken");
+            throw new ConflictException("Email already taken");
         }
 
         User user = new User();
@@ -55,52 +57,34 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.username, authRequest.password)
-            );
-        } catch (BadCredentialsException e) {
-            return ResponseEntity.status(401).body("Invalid username or password");
-        }
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest authRequest) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(authRequest.username(), authRequest.password())
+        );
 
-        UserDetails userDetails = userRepository.findByUsername(authRequest.username)
-                .or(() -> userRepository.findByEmail(authRequest.username))
+        UserDetails userDetails = userRepository.findByUsername(authRequest.username())
+                .or(() -> userRepository.findByEmail(authRequest.username()))
                 .map(user -> org.springframework.security.core.userdetails.User
                         .withUsername(user.getUsername())
                         .password(user.getPassword())
                         .authorities("ROLE_USER")
                         .build())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         String jwt = jwtUtil.generateToken(userDetails.getUsername());
         return ResponseEntity.ok(new AuthResponse(jwt));
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody Map<String,String> body) {
-        String userOrEmail = body.get("username");
-        String token = passwordService.createResetToken(userOrEmail);
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        String token = passwordService.createResetToken(request.username());
         // For MVP return token in body; in prod email it.
         return ResponseEntity.ok(Map.of("resetToken", token));
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@RequestBody Map<String,String> body) {
-        passwordService.resetPassword(body.get("token"), body.get("newPassword"));
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordService.resetPassword(request.token(), request.newPassword());
         return ResponseEntity.ok("Password reset successful");
-    }
-
-    static class AuthRequest {
-        public String username;
-        public String password;
-    }
-
-    static class AuthResponse {
-        public String token;
-
-        public AuthResponse(String token) {
-            this.token = token;
-        }
     }
 }

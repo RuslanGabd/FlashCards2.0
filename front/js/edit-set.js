@@ -2,9 +2,10 @@ const STORAGE_KEY = "words-up-editor-draft";
 const LOCAL_SETS_KEY = "words-up-local-sets";
 const CURRENT_LOCAL_SET_ID_KEY = "words-up-current-local-set-id";
 const CURRENT_REMOTE_SET_ID_KEY = "words-up-current-remote-set-id";
-const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8081" : "";
+const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8085" : "";
 const DICTIONARY_LOOKUP_URL = `${API_BASE_URL}/api/dictionary/lookup`;
 const AI_CREATE_SET_URL = `${API_BASE_URL}/api/ai/create-set`;
+const AI_EXAMPLE_URL = `${API_BASE_URL}/api/ai/example`;
 
 const termSuggestionWords = [
     "accomplish", "achieve", "answer", "beautiful", "become", "build", "change", "close",
@@ -100,7 +101,7 @@ bottomCreateButtons.forEach(button => {
 });
 
 addCardButton.addEventListener("click", () => {
-    cards.push({ term: "", definition: "", image: "" });
+    cards.push({ term: "", definition: "", exampleSentence: "", image: "" });
     saveDraft();
     renderCards();
     focusCard(cards.length - 1, "term");
@@ -330,6 +331,11 @@ function renderCards() {
                 <span>DEFINITION</span>
                 <div class="editor-suggestions" data-suggestion-list="definition" data-card-index="${index}" hidden></div>
             </div>
+            <div class="editor-field editor-example-field">
+                <input value="${escapeAttribute(card.exampleSentence || "")}" maxlength="2000" aria-label="Example sentence ${index + 1}" data-card-index="${index}" data-field="exampleSentence" />
+                <span>EXAMPLE SENTENCE</span>
+                <button class="generate-example-button" type="button" data-action="generate-example" data-index="${index}">Generate with DeepSeek</button>
+            </div>
             <button class="image-drop ${card.image ? "has-image" : ""}" type="button" data-action="image" data-index="${index}" aria-label="Add image to card ${index + 1}">
                 ${card.image ? `<img src="${card.image}" alt="" />` : `<span class="image-icon" aria-hidden="true">▧</span>`}
                 <strong>${card.image ? "Change" : "Image"}</strong>
@@ -346,11 +352,15 @@ function renderCards() {
             if (event.target.dataset.field === "term") {
                 updateDuplicateTermWarnings();
             }
-            handleSuggestionInput(event.target);
+            if (event.target.dataset.field !== "exampleSentence") {
+                handleSuggestionInput(event.target);
+            }
         });
 
         input.addEventListener("focus", event => {
-            handleSuggestionInput(event.target);
+            if (event.target.dataset.field !== "exampleSentence") {
+                handleSuggestionInput(event.target);
+            }
         });
 
         input.addEventListener("keydown", event => {
@@ -405,6 +415,11 @@ function renderDiagram() {
 }
 
 function handleCardAction(action, index) {
+    if (action === "generate-example") {
+        generateExampleForCard(index);
+        return;
+    }
+
     if (action === "delete") {
         cards.splice(index, 1);
         saveDraft();
@@ -469,9 +484,52 @@ async function generateCardsByAi(text) {
         ? data.cards.map(card => ({
             term: card.term || "",
             definition: card.definition || "",
+            exampleSentence: card.exampleSentence || "",
             image: "",
         })).filter(card => card.term && card.definition)
         : [];
+}
+
+async function generateExampleForCard(index) {
+    const card = cards[index];
+    if (!card?.term?.trim()) {
+        showToast("Enter the English word first");
+        focusCard(index, "term");
+        return;
+    }
+
+    const button = editorCards.querySelector(`button[data-action="generate-example"][data-index="${index}"]`);
+    if (button) {
+        button.disabled = true;
+        button.textContent = "Generating...";
+    }
+
+    try {
+        const response = await fetch(AI_EXAMPLE_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${getAuthToken()}`,
+            },
+            body: JSON.stringify({
+                term: card.term.trim(),
+                definition: String(card.definition || "").trim(),
+            }),
+        });
+        if (!response.ok) throw new Error("Example generation failed");
+        const data = await response.json();
+        card.exampleSentence = String(data.exampleSentence || "").trim();
+        saveDraft();
+        renderCards();
+        showToast(card.exampleSentence ? "Example generated" : "AI did not return an example");
+    } catch (error) {
+        console.error("Example generation failed:", error);
+        showToast("Could not generate example");
+        if (button) {
+            button.disabled = false;
+            button.textContent = "Generate with DeepSeek";
+        }
+    }
 }
 
 function focusCard(index, field) {
@@ -848,7 +906,7 @@ function parseImportedCards(value) {
             const parts = splitImportedLine(line);
             if (!parts) return null;
             const [term, definition] = parts;
-            return { term, definition, image: "" };
+            return { term, definition, exampleSentence: "", image: "" };
         })
         .filter(Boolean);
 }
@@ -959,6 +1017,7 @@ function createSetPayload() {
             .map(card => ({
                 term: String(card.term || "").trim(),
                 definition: String(card.definition || "").trim(),
+                exampleSentence: String(card.exampleSentence || "").trim(),
             }))
             .filter(card => card.term || card.definition),
     };
@@ -976,6 +1035,7 @@ function saveLocalSet() {
         .map(card => ({
             term: String(card.term || "").trim(),
             definition: String(card.definition || "").trim(),
+            exampleSentence: String(card.exampleSentence || "").trim(),
             image: card.image || "",
         }))
         .filter(card => card.term || card.definition);
@@ -1043,8 +1103,8 @@ function loadDraft() {
 function createEmptyDraft() {
     return {
         cards: [
-            { term: "", definition: "", image: "" },
-            { term: "", definition: "", image: "" },
+            { term: "", definition: "", exampleSentence: "", image: "" },
+            { term: "", definition: "", exampleSentence: "", image: "" },
         ],
         diagram: null,
         meta: { title: "", description: "", isPublic: true },

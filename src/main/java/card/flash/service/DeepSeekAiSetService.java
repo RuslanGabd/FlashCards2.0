@@ -3,6 +3,8 @@ package card.flash.service;
 import card.flash.dto.AiSetCardDto;
 import card.flash.dto.AiSetGenerationRequest;
 import card.flash.dto.AiSetGenerationResponse;
+import card.flash.dto.AiExampleGenerationRequest;
+import card.flash.dto.AiExampleGenerationResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,6 +68,46 @@ public class DeepSeekAiSetService {
         }
     }
 
+    public AiExampleGenerationResponse generateExample(AiExampleGenerationRequest request) {
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new IllegalStateException("DEEPSEEK_API_KEY is not configured");
+        }
+
+        String term = request.term().trim();
+        String definition = request.definition() == null ? "" : request.definition().trim();
+        try {
+            Map<String, Object> payload = Map.of(
+                    "model", model,
+                    "temperature", 0.2,
+                    "max_tokens", 120,
+                    "messages", List.of(
+                            Map.of(
+                                    "role", "system",
+                                    "content", "Return only one short, natural English example sentence. "
+                                            + "Use the requested word or its natural grammatical form. No quotes or explanation."
+                            ),
+                            Map.of(
+                                    "role", "user",
+                                    "content", "Word: " + term + (definition.isBlank() ? "" : "\nRussian meaning: " + definition)
+                            )
+                    )
+            );
+            String sentence = requestDeepSeek(payload).trim();
+            if (sentence.startsWith("\"") && sentence.endsWith("\"") && sentence.length() > 1) {
+                sentence = sentence.substring(1, sentence.length() - 1).trim();
+            }
+            if (sentence.length() > 2_000) {
+                sentence = sentence.substring(0, 2_000);
+            }
+            return new AiExampleGenerationResponse(sentence);
+        } catch (IOException | InterruptedException exception) {
+            if (exception instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw new IllegalStateException("DeepSeek request failed", exception);
+        }
+    }
+
     private String requestDeepSeekCards(String title, String text) throws IOException, InterruptedException {
         Map<String, Object> payload = Map.of(
                 "model", model,
@@ -78,9 +120,11 @@ public class DeepSeekAiSetService {
                                         You create English-Russian flashcards from user text.
                                         Extract important English vocabulary from the text.
                                         Return only valid JSON with this shape:
-                                        {"cards":[{"term":"english word or phrase","definition":"russian translation"}]}
+                                        {"cards":[{"term":"english word or phrase","definition":"russian translation","exampleSentence":"natural English example sentence"}]}
                                         No markdown, no explanation.
                                         Keep 12 to 30 useful cards.
+                                        Every exampleSentence must contain the term (or its natural grammatical form),
+                                        be concise, and make its meaning clear from context.
                                         """
                         ),
                         Map.of(
@@ -90,6 +134,10 @@ public class DeepSeekAiSetService {
                 )
         );
 
+        return requestDeepSeek(payload);
+    }
+
+    private String requestDeepSeek(Map<String, Object> payload) throws IOException, InterruptedException {
         HttpRequest httpRequest = HttpRequest.newBuilder()
                 .uri(URI.create(chatUrl))
                 .timeout(Duration.ofSeconds(60))
@@ -120,8 +168,9 @@ public class DeepSeekAiSetService {
         for (JsonNode cardNode : cardNodes) {
             String term = cardNode.path("term").asText("").trim();
             String definition = cardNode.path("definition").asText("").trim();
+            String exampleSentence = cardNode.path("exampleSentence").asText("").trim();
             if (!term.isBlank() && !definition.isBlank()) {
-                cards.add(new AiSetCardDto(term, definition));
+                cards.add(new AiSetCardDto(term, definition, exampleSentence));
             }
         }
         return cards;

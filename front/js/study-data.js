@@ -1,4 +1,4 @@
-const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8081" : "";
+const STUDY_API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8085" : "";
 const EDITOR_DRAFT_KEY = "words-up-editor-draft";
 const LOCAL_SETS_KEY = "words-up-local-sets";
 
@@ -12,8 +12,20 @@ async function loadStudySet() {
     }
 
     if (setId) {
-        const response = await fetch(`${API_BASE_URL}/api/flashcards/set/${setId}`);
-        if (!response.ok) throw new Error("Failed to fetch flashcards");
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${STUDY_API_BASE_URL}/api/flashcards/set/${encodeURIComponent(setId)}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!response.ok) {
+            let message = "Failed to fetch flashcards";
+            try {
+                const error = await response.json();
+                message = error.message || message;
+            } catch {
+                // Keep the fallback when the server did not return JSON.
+            }
+            throw new Error(message);
+        }
         const cards = await response.json();
         return {
             title: `Set ${setId}`,
@@ -55,6 +67,7 @@ function normalizeCards(cards) {
         .map(card => ({
             term: String(card.term || "").trim(),
             definition: String(card.definition || "").trim(),
+            exampleSentence: String(card.exampleSentence || "").trim(),
         }))
         .filter(card => card.term && card.definition);
 }

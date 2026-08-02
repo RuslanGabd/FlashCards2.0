@@ -1,5 +1,7 @@
 package card.flash.controller;
 
+import card.flash.dto.AiExampleGenerationRequest;
+import card.flash.dto.AiExampleGenerationResponse;
 import card.flash.dto.AiSetGenerationRequest;
 import card.flash.dto.AiSetGenerationResponse;
 import card.flash.service.DeepSeekAiSetService;
@@ -22,5 +24,10 @@ public class AiSetController {
     @PostMapping("/create-set")
     public AiSetGenerationResponse createSet(@Valid @RequestBody AiSetGenerationRequest request) {
         return deepSeekAiSetService.generateSet(request);
+    }
+
+    @PostMapping("/example")
+    public AiExampleGenerationResponse createExample(@Valid @RequestBody AiExampleGenerationRequest request) {
+        return deepSeekAiSetService.generateExample(request);
     }
 }

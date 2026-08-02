@@ -2,6 +2,7 @@ package card.flash.service;
 
 import card.flash.entity.PasswordResetToken;
 import card.flash.entity.User;
+import card.flash.exception.ResourceNotFoundException;
 import card.flash.repository.PasswordResetTokenRepository;
 import card.flash.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ public class PasswordService {
     public String createResetToken(String usernameOrEmail) {
         User user = userRepo.findByUsername(usernameOrEmail)
                 .or(() -> userRepo.findByEmail(usernameOrEmail))
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         String token = UUID.randomUUID().toString();
         var prt = new PasswordResetToken();
         prt.setToken(token);
@@ -34,9 +35,9 @@ public class PasswordService {
 
     public void resetPassword(String token, String newPassword) {
         PasswordResetToken prt = tokenRepo.findByToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid token"));
+                .orElseThrow(() -> new ResourceNotFoundException("Invalid reset token"));
         if (prt.getExpiryDate().isBefore(LocalDateTime.now()))
-            throw new RuntimeException("Token expired");
+            throw new IllegalArgumentException("Reset token expired");
         User user = prt.getUser();
         user.setPassword(encoder.encode(newPassword));
         userRepo.save(user);

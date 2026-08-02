@@ -1,11 +1,14 @@
 package card.flash.security;
 
+import card.flash.exception.ApiError;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -13,6 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Clock;
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -30,12 +34,15 @@ public class ExternalApiRateLimitFilter extends OncePerRequestFilter {
     private final ConcurrentHashMap<String, Window> windows = new ConcurrentHashMap<>();
     private final AtomicLong lastCleanup = new AtomicLong();
     private final Clock clock;
+    private final ObjectMapper objectMapper;
 
-    public ExternalApiRateLimitFilter() {
-        this(Clock.systemUTC());
+    @Autowired
+    public ExternalApiRateLimitFilter(ObjectMapper objectMapper) {
+        this(objectMapper, Clock.systemUTC());
     }
 
-    ExternalApiRateLimitFilter(Clock clock) {
+    ExternalApiRateLimitFilter(ObjectMapper objectMapper, Clock clock) {
+        this.objectMapper = objectMapper;
         this.clock = clock;
     }
 
@@ -70,7 +77,14 @@ public class ExternalApiRateLimitFilter extends OncePerRequestFilter {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setHeader("Retry-After", String.valueOf(retryAfterSeconds));
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            response.getWriter().write("{\"error\":\"Rate limit exceeded\"}");
+            objectMapper.writeValue(response.getWriter(), new ApiError(
+                    Instant.now(clock),
+                    HttpStatus.TOO_MANY_REQUESTS.value(),
+                    HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase(),
+                    "Rate limit exceeded",
+                    request.getRequestURI(),
+                    Map.of()
+            ));
             return;
         }
 

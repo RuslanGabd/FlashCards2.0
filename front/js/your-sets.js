@@ -1,6 +1,6 @@
 const EDITOR_DRAFT_KEY = "words-up-editor-draft";
 const LOCAL_SETS_KEY = "words-up-local-sets";
-const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8081" : "";
+const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8085" : "";
 
 let librarySets = [];
 
@@ -113,7 +113,7 @@ async function loadSavedSets() {
                 <div>
                     <p class="set-meta">Connection problem</p>
                     <h3>Error loading sets</h3>
-                    <p class="set-description">Check that the backend is running on localhost:8081.</p>
+                    <p class="set-description">Check that the backend is running on localhost:8085.</p>
                 </div>
             </article>
         `;

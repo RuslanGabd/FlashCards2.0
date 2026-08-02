@@ -1,6 +1,6 @@
 const EDITOR_DRAFT_KEY = "words-up-editor-draft";
 const MY_TEXTS_KEY = "words-up-my-texts";
-const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8081" : "";
+const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8085" : "";
 const DICTIONARY_LOOKUP_URL = `${API_BASE_URL}/api/dictionary/lookup`;
 const TRANSLATION_CHUNK_SIZE = 25;
 

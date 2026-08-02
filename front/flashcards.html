@@ -10,7 +10,7 @@
 <main class="flash-study-shell">
     <section class="mode-grid" aria-label="Study modes">
         <a class="mode-tile active" href="flashcards.html"><span aria-hidden="true">▣</span> Flashcards</a>
-        <a class="mode-tile" href="practice.html"><span aria-hidden="true">◌</span> Learn</a>
+        <a class="mode-tile" id="typing-mode-link" href="typing.html"><span aria-hidden="true">◌</span> Learn</a>
         <a class="mode-tile" href="practice.html"><span aria-hidden="true">▤</span> Test</a>
         <a class="mode-tile" href="match.html"><span aria-hidden="true">▦</span> Blocks</a>
         <a class="mode-tile" href="practice.html"><span aria-hidden="true">◆</span> Blast</a>
@@ -23,7 +23,8 @@
     </div>
 
     <div class="flash-study-layout">
-        <section class="flash-study-card" id="flash-study-card" tabindex="0" aria-label="Flashcard">
+        <div class="flash-card-column">
+          <section class="flash-study-card" id="flash-study-card" tabindex="0" aria-label="Flashcard">
             <div class="flash-card-topline">
                 <button class="hint-button" id="hint-button" type="button">♡ Get a hint</button>
                 <div class="flash-card-tools">
@@ -40,7 +41,9 @@
             </div>
             <p class="flash-card-face" id="flash-card-face">Loading...</p>
             <p class="flash-card-hint" id="flash-card-hint" hidden></p>
-        </section>
+          </section>
+          <p class="flash-example-sentence" id="flash-example-sentence" hidden></p>
+        </div>
 
         <aside class="study-timer-panel" aria-label="Study timers">
             <section class="timer-widget">

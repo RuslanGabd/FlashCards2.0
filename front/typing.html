@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Typing - Words Up</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="study-mode-page">
+<header class="study-mode-topbar">
+    <a class="brand" href="index.html">Words Up</a>
+    <nav class="words-nav" aria-label="Typing practice navigation">
+        <a id="typing-flashcards-link" href="flashcards.html">Flashcards</a>
+        <a id="typing-practice-link" href="practice.html">Practice</a>
+        <a href="edit-set.html">Edit set</a>
+    </nav>
+</header>
+
+<main class="study-mode-shell">
+    <section class="study-mode-heading">
+        <div>
+            <p class="eyebrow">English typing</p>
+            <h1 id="typing-title">Type the English word</h1>
+        </div>
+        <p id="typing-progress">0 / 0</p>
+    </section>
+
+    <section class="practice-card typing-card" id="typing-card">
+        <p class="practice-question-label">Translate into English</p>
+        <h2 id="typing-question">Loading...</h2>
+
+        <form class="typing-answer-form" id="typing-answer-form" autocomplete="off">
+            <label class="typing-answer-label" for="typing-answer-input">English word</label>
+            <input id="typing-answer-input" type="text" maxlength="2000"
+                   placeholder="Type your answer" autocomplete="off" spellcheck="false" />
+            <p class="typing-feedback" id="typing-feedback" role="status" aria-live="polite"></p>
+            <div class="practice-actions">
+                <button class="secondary-create-button" id="typing-reveal-button" type="button">I don't know</button>
+                <button class="primary-create-button" id="typing-check-button" type="submit">Check</button>
+                <button class="primary-create-button" id="typing-next-button" type="button" hidden>Next</button>
+                <button class="secondary-create-button" id="typing-retry-button" type="button" hidden>Practice mistakes</button>
+            </div>
+        </form>
+    </section>
+</main>
+
+<script src="js/study-data.js"></script>
+<script src="js/typing.js"></script>
+</body>
+</html>

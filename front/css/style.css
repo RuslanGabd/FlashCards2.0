@@ -1308,6 +1308,81 @@ body {
     font-weight: 900;
 }
 
+.flash-card-column {
+    min-width: 0;
+    display: grid;
+    gap: 0.85rem;
+}
+
+.flash-example-sentence {
+    margin: 0;
+    border-radius: 12px;
+    background: rgba(48, 59, 91, 0.78);
+    color: #dbe2ff;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    padding: 1rem 1.25rem;
+    text-align: center;
+}
+
+.flash-example-sentence::before {
+    content: "Example: ";
+    color: #9eacff;
+    font-weight: 900;
+}
+
+.typing-card {
+    min-height: 430px;
+}
+
+.typing-answer-form {
+    width: min(560px, 100%);
+    display: grid;
+    gap: 1rem;
+}
+
+.typing-answer-label {
+    color: #59627a;
+    font-weight: 800;
+    text-align: left;
+}
+
+.typing-answer-form input {
+    width: 100%;
+    border: 2px solid #d7dbea;
+    border-radius: 10px;
+    background: #f8f9fc;
+    color: #303545;
+    font: inherit;
+    font-size: 1.25rem;
+    padding: 0.95rem 1rem;
+    text-align: center;
+}
+
+.typing-answer-form input:focus {
+    border-color: #4257b2;
+    box-shadow: 0 0 0 4px rgba(66, 87, 178, 0.14);
+    outline: 0;
+}
+
+.typing-feedback {
+    min-height: 1.5rem;
+    color: #697188;
+    font-weight: 900;
+}
+
+.typing-feedback.correct {
+    color: #18864b;
+}
+
+.typing-feedback.incorrect {
+    color: #c83c4d;
+}
+
+.typing-feedback.revealed {
+    color: #4257b2;
+}
+
 .practice-actions,
 .match-actions {
     display: flex;
@@ -2032,6 +2107,28 @@ body {
     color: #eef2ff;
     font-weight: 900;
     font-size: 0.95rem;
+}
+
+.editor-example-field {
+    grid-column: 1 / -1;
+}
+
+.generate-example-button {
+    justify-self: start;
+    min-height: 38px;
+    border: 0;
+    border-radius: 999px;
+    background: #4257ff;
+    color: white;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 900;
+    padding: 0 1rem;
+}
+
+.generate-example-button:disabled {
+    cursor: wait;
+    opacity: 0.65;
 }
 
 .editor-suggestions {

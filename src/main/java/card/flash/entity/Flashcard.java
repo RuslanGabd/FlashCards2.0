@@ -29,6 +29,9 @@ public class Flashcard {
 
     private String definition;
 
+    @Column(name = "example_sentence", length = 2_000)
+    private String exampleSentence;
+
     @ManyToOne
     @JoinColumn(name = "set_id", nullable = false)
     private FlashcardSet set;

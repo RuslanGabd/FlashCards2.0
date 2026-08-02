@@ -11,15 +11,19 @@ let elapsedAccumulatedMs = 0;
 let countdownTimerId = null;
 let countdownEndsAt = 0;
 let countdownRemainingMs = 0;
+let pronunciationPlaybackToken = 0;
+let activePronunciationAudio = null;
+let activePronunciationCancel = null;
 const pronunciationCache = new Map();
 const favoriteTerms = new Set(JSON.parse(localStorage.getItem("words-up-favorite-terms") || "[]"));
 let flashSettings = JSON.parse(localStorage.getItem("words-up-flash-settings") || "{}");
-const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8081" : "";
+const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8085" : "";
 const PRONUNCIATION_API_URL = `${API_BASE_URL}/api/pronunciation`;
 
 const flashCard = document.getElementById("flash-study-card");
 const flashFace = document.getElementById("flash-card-face");
 const flashHint = document.getElementById("flash-card-hint");
+const flashExampleSentence = document.getElementById("flash-example-sentence");
 const flashCounter = document.getElementById("flash-counter");
 const emptyState = document.getElementById("flash-empty-state");
 const hintButton = document.getElementById("hint-button");
@@ -61,6 +65,7 @@ const countdownResetButton = document.getElementById("countdown-reset-button");
 
 document.addEventListener("DOMContentLoaded", async () => {
     try {
+        document.getElementById("typing-mode-link").href = `typing.html${window.location.search}`;
         applySavedSettings();
         const set = await loadStudySet();
         allCards = set.cards;
@@ -124,8 +129,8 @@ favoriteButton.addEventListener("click", () => {
 });
 
 flipButton.addEventListener("click", flipCard);
-previousButton.addEventListener("click", showPreviousCard);
-nextButton.addEventListener("click", showNextCard);
+previousButton.addEventListener("click", () => showPreviousCard());
+nextButton.addEventListener("click", () => showNextCard());
 
 playButton.addEventListener("click", () => {
     if (autoplayId) {
@@ -138,7 +143,7 @@ playButton.addEventListener("click", () => {
         if (!isBackSide) {
             flipCard();
         } else {
-            showNextCard();
+            showNextCard(true);
         }
     }, 1800);
 });
@@ -261,6 +266,8 @@ function renderCurrentCard() {
     flashFace.textContent = getCardFace(card);
     flashHint.hidden = true;
     flashHint.textContent = "";
+    flashExampleSentence.textContent = card.exampleSentence || "";
+    flashExampleSentence.hidden = !card.exampleSentence;
     flashCounter.textContent = `${currentIndex + 1} / ${cards.length}`;
     renderFavoriteState();
 
@@ -275,10 +282,12 @@ function flipCard() {
     renderCurrentCard();
 }
 
-function showNextCard() {
+function showNextCard(resetToConfiguredFront = false) {
     if (!cards.length) return;
     currentIndex = (currentIndex + 1) % cards.length;
-    isBackSide = frontSideSelect.value === "definition";
+    if (resetToConfiguredFront) {
+        isBackSide = frontSideSelect.value === "definition";
+    }
     renderCurrentCard();
     autoSpeakCurrentCard();
 }
@@ -286,7 +295,6 @@ function showNextCard() {
 function showPreviousCard() {
     if (!cards.length) return;
     currentIndex = (currentIndex - 1 + cards.length) % cards.length;
-    isBackSide = frontSideSelect.value === "definition";
     renderCurrentCard();
     autoSpeakCurrentCard();
 }
@@ -543,6 +551,9 @@ function playCountdownDoneSound() {
 }
 
 async function speakCurrentCardSide(card) {
+    const playbackToken = ++pronunciationPlaybackToken;
+    stopActivePronunciation();
+
     const side = getCurrentSide();
     const text = String((side === "definition" ? card.definition : card.term) || "").trim();
     if (!text) {
@@ -558,8 +569,12 @@ async function speakCurrentCardSide(card) {
 
     const lang = isRussianSide ? "ru" : "en";
     const accent = isRussianSide ? "" : accentSelect.value;
-    const playedForvoAudio = await playForvoPronunciation(text, lang, accent);
+    const playedForvoAudio = await playForvoPronunciation(text, lang, accent, playbackToken);
     if (playedForvoAudio) {
+        return;
+    }
+
+    if (playbackToken !== pronunciationPlaybackToken) {
         return;
     }
 
@@ -586,42 +601,92 @@ async function speakCurrentCardSide(card) {
         showFlashMessage("Could not play pronunciation");
     };
 
-    speechSynthesis.cancel();
     speechSynthesis.resume();
+    await waitForPronunciationStart(90);
+    if (playbackToken !== pronunciationPlaybackToken) {
+        return;
+    }
     speechSynthesis.speak(utterance);
 }
 
-async function playForvoPronunciation(word, language, accent) {
+async function playForvoPronunciation(word, language, accent, playbackToken) {
     const audioUrl = await getForvoAudioUrl(word, language, accent);
-    if (!audioUrl) {
+    if (!audioUrl || playbackToken !== pronunciationPlaybackToken) {
         return false;
     }
 
     return new Promise(resolve => {
         const audio = new Audio(audioUrl);
+        activePronunciationAudio = audio;
+        audio.preload = "auto";
         let resolved = false;
+        let started = false;
 
         const finish = value => {
             if (resolved) return;
             resolved = true;
+            if (activePronunciationAudio === audio) {
+                activePronunciationAudio = null;
+                activePronunciationCancel = null;
+            }
             speakButton.classList.remove("active");
             resolve(value);
         };
 
+        const start = async () => {
+            if (started || resolved) return;
+            started = true;
+            if (playbackToken !== pronunciationPlaybackToken) {
+                finish(false);
+                return;
+            }
+
+            audio.currentTime = 0;
+            await waitForPronunciationStart(70);
+            if (playbackToken !== pronunciationPlaybackToken) {
+                finish(false);
+                return;
+            }
+
+            audio.play()
+                    .then(() => {
+                        window.setTimeout(() => {
+                            if (!resolved && audio.ended) {
+                                finish(true);
+                            }
+                        }, 300);
+                    })
+                    .catch(() => finish(false));
+        };
+
         speakButton.classList.add("active");
+        activePronunciationCancel = () => finish(false);
         audio.addEventListener("ended", () => finish(true), { once: true });
         audio.addEventListener("error", () => finish(false), { once: true });
-
-        audio.play()
-                .then(() => {
-                    window.setTimeout(() => {
-                        if (!resolved && audio.ended) {
-                            finish(true);
-                        }
-                    }, 300);
-                })
-                .catch(() => finish(false));
+        audio.addEventListener("canplaythrough", start, { once: true });
+        audio.addEventListener("loadeddata", start, { once: true });
+        window.setTimeout(start, 1200);
+        audio.load();
     });
+}
+
+function stopActivePronunciation() {
+    const cancelPlayback = activePronunciationCancel;
+    if (activePronunciationAudio) {
+        activePronunciationAudio.pause();
+        activePronunciationAudio.currentTime = 0;
+        activePronunciationAudio = null;
+    }
+    activePronunciationCancel = null;
+    cancelPlayback?.();
+    if ("speechSynthesis" in window) {
+        speechSynthesis.cancel();
+    }
+    speakButton.classList.remove("active");
+}
+
+function waitForPronunciationStart(milliseconds) {
+    return new Promise(resolve => window.setTimeout(resolve, milliseconds));
 }
 
 async function getForvoAudioUrl(word, language, accent) {
@@ -631,7 +696,7 @@ async function getForvoAudioUrl(word, language, accent) {
     }
 
     try {
-        const url = new URL(PRONUNCIATION_API_URL);
+        const url = new URL(PRONUNCIATION_API_URL, window.location.origin);
         url.searchParams.set("word", word);
         url.searchParams.set("language", language);
         if (accent) {
