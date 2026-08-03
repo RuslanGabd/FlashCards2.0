@@ -56,6 +56,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/flashcards/set/**").permitAll()
                         .requestMatchers("/api/sets/**").authenticated()
                         .requestMatchers("/api/flashcards/**").authenticated()
+                        .requestMatchers("/api/annotations/**").authenticated()
                         .requestMatchers("/api/ai/**", "/api/dictionary/**", "/api/pronunciation/**").authenticated()
                         .anyRequest().permitAll()
                 )

@@ -7,10 +7,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Entity
@@ -35,6 +39,12 @@ public class Flashcard {
     @ManyToOne
     @JoinColumn(name = "set_id", nullable = false)
     private FlashcardSet set;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "flashcard", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<FlashcardAnnotation> annotations = new ArrayList<>();
 
 
 

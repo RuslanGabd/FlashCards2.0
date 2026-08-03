@@ -153,7 +153,10 @@ function renderPublicSets(sets) {
                 <h3>${escapeHtml(set.title)}</h3>
                 <p class="set-description">${escapeHtml(set.description || "No description")}</p>
             </div>
-            <a class="study-link" href="flashcards.html?setId=${set.id}">Study</a>
+            <div class="set-actions">
+                <a class="study-link" href="flashcards.html?setId=${encodeURIComponent(set.id)}">Study</a>
+                <a class="study-link secondary-study-link" href="edit-set.html?setId=${encodeURIComponent(set.id)}">Edit</a>
+            </div>
         `;
         savedSetsContainer.appendChild(item);
     });

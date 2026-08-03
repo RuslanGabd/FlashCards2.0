@@ -16,6 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -70,6 +72,21 @@ class CrudIntegrationTests {
                 .andReturn().getResponse().getContentAsString();
         JsonNode cardJson = objectMapper.readTree(cardResponse);
         long cardId = cardJson.path("id").asLong();
+
+        mockMvc.perform(put("/api/annotations/card/{id}", cardId)
+                        .header("Authorization", bearer)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "drawingData", "[{\"tool\":\"pencil\",\"points\":[{\"x\":0.1,\"y\":0.2}]}]"
+                        ))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.flashcardId").value(cardId))
+                .andExpect(jsonPath("$.drawingData").value(org.hamcrest.Matchers.containsString("pencil")));
+
+        mockMvc.perform(get("/api/annotations/card/{id}", cardId)
+                        .header("Authorization", bearer))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.drawingData").value(org.hamcrest.Matchers.containsString("pencil")));
 
         mockMvc.perform(get("/api/flashcards/set/{id}", setId))
                 .andExpect(status().isOk())

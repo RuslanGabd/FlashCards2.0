@@ -41,8 +41,18 @@
             </div>
             <p class="flash-card-face" id="flash-card-face">Loading...</p>
             <p class="flash-card-hint" id="flash-card-hint" hidden></p>
+            <canvas class="flash-annotation-canvas" id="flash-annotation-canvas" aria-label="Card annotations"></canvas>
           </section>
           <p class="flash-example-sentence" id="flash-example-sentence" hidden></p>
+          <div class="annotation-controls" id="annotation-controls" aria-label="Annotation tools">
+              <button id="annotation-layer-toggle" type="button" aria-pressed="true">Hide notes</button>
+              <button class="annotation-tool-button" data-annotation-tool="pencil" type="button">Pencil</button>
+              <button class="annotation-tool-button" data-annotation-tool="marker" type="button">Marker</button>
+              <button class="annotation-tool-button" data-annotation-tool="eraser" type="button">Eraser</button>
+              <button id="annotation-done-button" type="button" hidden>Done</button>
+              <button id="annotation-clear-button" type="button">Clear</button>
+              <span class="annotation-save-status" id="annotation-save-status" role="status" aria-live="polite"></span>
+          </div>
         </div>
 
         <aside class="study-timer-panel" aria-label="Study timers">

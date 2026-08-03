@@ -64,7 +64,9 @@ function loadDraftStudySet() {
 
 function normalizeCards(cards) {
     return (Array.isArray(cards) ? cards : [])
-        .map(card => ({
+        .map((card, index) => ({
+            id: Number.isFinite(Number(card.id)) ? Number(card.id) : null,
+            annotationKey: card.id ? `remote-${card.id}` : `local-${index}-${String(card.term || "").trim()}`,
             term: String(card.term || "").trim(),
             definition: String(card.definition || "").trim(),
             exampleSentence: String(card.exampleSentence || "").trim(),

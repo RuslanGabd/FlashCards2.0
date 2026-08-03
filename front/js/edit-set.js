@@ -73,6 +73,7 @@ setDescription.value = setMeta.description;
 renderVisibility();
 renderDiagram();
 renderCards();
+loadRequestedSetForEditing();
 
 doneButton.addEventListener("click", async () => {
     saveDraft();
@@ -334,7 +335,7 @@ function renderCards() {
             <div class="editor-field editor-example-field">
                 <input value="${escapeAttribute(card.exampleSentence || "")}" maxlength="2000" aria-label="Example sentence ${index + 1}" data-card-index="${index}" data-field="exampleSentence" />
                 <span>EXAMPLE SENTENCE</span>
-                <button class="generate-example-button" type="button" data-action="generate-example" data-index="${index}">Generate with DeepSeek</button>
+                <button class="generate-example-button" type="button" data-action="generate-example" data-index="${index}">Generate sentence</button>
             </div>
             <button class="image-drop ${card.image ? "has-image" : ""}" type="button" data-action="image" data-index="${index}" aria-label="Add image to card ${index + 1}">
                 ${card.image ? `<img src="${card.image}" alt="" />` : `<span class="image-icon" aria-hidden="true">▧</span>`}
@@ -527,7 +528,7 @@ async function generateExampleForCard(index) {
         showToast("Could not generate example");
         if (button) {
             button.disabled = false;
-            button.textContent = "Generate with DeepSeek";
+            button.textContent = "Generate sentence";
         }
     }
 }
@@ -1097,6 +1098,58 @@ function loadDraft() {
         };
     } catch {
         return createStarterDraft();
+    }
+}
+
+async function loadRequestedSetForEditing() {
+    const setId = new URLSearchParams(window.location.search).get("setId");
+    if (!setId) return;
+
+    const token = getAuthToken();
+    if (!token) {
+        showToast("Log in to edit this set");
+        return;
+    }
+
+    try {
+        const headers = { Authorization: `Bearer ${token}` };
+        const [setResponse, cardsResponse] = await Promise.all([
+            fetch(`${API_BASE_URL}/api/sets/${encodeURIComponent(setId)}`, { headers }),
+            fetch(`${API_BASE_URL}/api/flashcards/set/${encodeURIComponent(setId)}`, { headers }),
+        ]);
+        if (!setResponse.ok || !cardsResponse.ok) {
+            throw new Error("Set could not be loaded for editing");
+        }
+
+        const [remoteSet, remoteCards] = await Promise.all([
+            setResponse.json(),
+            cardsResponse.json(),
+        ]);
+        cards = Array.isArray(remoteCards)
+            ? remoteCards.map(card => ({
+                term: String(card.term || ""),
+                definition: String(card.definition || ""),
+                exampleSentence: String(card.exampleSentence || ""),
+                image: "",
+            }))
+            : [];
+        setMeta = {
+            title: remoteSet.title || "",
+            description: remoteSet.description || "",
+            isPublic: remoteSet.public !== false,
+        };
+        diagram = null;
+        localStorage.setItem(CURRENT_REMOTE_SET_ID_KEY, String(setId));
+        localStorage.removeItem(CURRENT_LOCAL_SET_ID_KEY);
+        setTitle.value = setMeta.title;
+        setDescription.value = setMeta.description;
+        renderVisibility();
+        renderDiagram();
+        renderCards();
+        saveDraft();
+    } catch (error) {
+        console.error("Remote set edit load failed:", error);
+        showToast("Could not load this set for editing");
     }
 }
 

@@ -8,6 +8,7 @@ let typingIncorrectCards = [];
 const typingTitle = document.getElementById("typing-title");
 const typingProgress = document.getElementById("typing-progress");
 const typingQuestion = document.getElementById("typing-question");
+const typingExampleSentence = document.getElementById("typing-example-sentence");
 const typingForm = document.getElementById("typing-answer-form");
 const typingInput = document.getElementById("typing-answer-input");
 const typingFeedback = document.getElementById("typing-feedback");
@@ -79,6 +80,8 @@ function renderTypingCard() {
     }
 
     if (typingCurrentIndex >= typingCards.length) {
+        typingExampleSentence.hidden = true;
+        typingExampleSentence.textContent = "";
         typingQuestion.textContent = "Session complete";
         typingProgress.textContent = `${typingCorrectCount} correct`;
         typingInput.hidden = true;
@@ -108,16 +111,21 @@ function renderTypingCard() {
     typingNextButton.hidden = true;
     typingNextButton.textContent = "Next";
     typingRetryButton.hidden = true;
+    typingExampleSentence.hidden = true;
+    typingExampleSentence.textContent = "";
     showTypingFeedback("", "");
     typingInput.focus();
 }
 
 function acceptTypingAnswer(message, state) {
+    const exampleSentence = typingCards[typingCurrentIndex]?.exampleSentence?.trim();
     typingAnswerAccepted = true;
     typingInput.disabled = true;
     typingCheckButton.hidden = true;
     typingRevealButton.hidden = true;
     typingNextButton.hidden = false;
+    typingExampleSentence.textContent = exampleSentence || "";
+    typingExampleSentence.hidden = !exampleSentence;
     showTypingFeedback(message, state);
     typingNextButton.focus();
 }

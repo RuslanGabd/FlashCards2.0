@@ -101,6 +101,9 @@ public class ForvoPronunciationService {
         if (!country.isBlank()) {
             builder.pathSegment("country", country);
         }
+        if ("word-pronunciations".equals(action)) {
+            builder.pathSegment("order", "rate-desc", "limit", "1");
+        }
         return builder.build()
                 .encode()
                 .toUri();

@@ -68,6 +68,18 @@ public class FlashcardSetController {
         return ResponseEntity.ok(dtoList);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<FlashcardSetDto> getOwnedSet(@PathVariable @Positive Long id,
+                                                       @AuthenticationPrincipal UserDetails userDetails) {
+        FlashcardSet set = flashcardSetService.getById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Flashcard set not found"));
+        if (set.getOwner() == null || userDetails == null
+                || !userDetails.getUsername().equals(set.getOwner().getUsername())) {
+            throw new AccessDeniedException("You can edit only your own sets");
+        }
+        return ResponseEntity.ok(FlashcardSetMapper.toDto(set));
+    }
+
     /** GET /api/sets/user/{username} → All sets owned by this username */
     @GetMapping("/user/{username}")
     public ResponseEntity<?> getSetsByUser(

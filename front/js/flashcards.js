@@ -14,16 +14,30 @@ let countdownRemainingMs = 0;
 let pronunciationPlaybackToken = 0;
 let activePronunciationAudio = null;
 let activePronunciationCancel = null;
-const pronunciationCache = new Map();
 const favoriteTerms = new Set(JSON.parse(localStorage.getItem("words-up-favorite-terms") || "[]"));
 let flashSettings = JSON.parse(localStorage.getItem("words-up-flash-settings") || "{}");
 const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8085" : "";
 const PRONUNCIATION_API_URL = `${API_BASE_URL}/api/pronunciation`;
+const ANNOTATION_LOCAL_PREFIX = "words-up-card-annotation:";
+const annotationCache = new Map();
+const annotationSaveTimers = new Map();
+let annotationStrokes = [];
+let currentAnnotationStroke = null;
+let activeAnnotationTool = null;
+let annotationLoadToken = 0;
+let annotationLayerVisible = localStorage.getItem("words-up-annotation-layer-visible") !== "false";
 
 const flashCard = document.getElementById("flash-study-card");
 const flashFace = document.getElementById("flash-card-face");
 const flashHint = document.getElementById("flash-card-hint");
 const flashExampleSentence = document.getElementById("flash-example-sentence");
+const annotationCanvas = document.getElementById("flash-annotation-canvas");
+const annotationContext = annotationCanvas.getContext("2d");
+const annotationLayerToggle = document.getElementById("annotation-layer-toggle");
+const annotationToolButtons = document.querySelectorAll("[data-annotation-tool]");
+const annotationDoneButton = document.getElementById("annotation-done-button");
+const annotationClearButton = document.getElementById("annotation-clear-button");
+const annotationSaveStatus = document.getElementById("annotation-save-status");
 const flashCounter = document.getElementById("flash-counter");
 const emptyState = document.getElementById("flash-empty-state");
 const hintButton = document.getElementById("hint-button");
@@ -67,6 +81,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
         document.getElementById("typing-mode-link").href = `typing.html${window.location.search}`;
         applySavedSettings();
+        initializeAnnotationTools();
         const set = await loadStudySet();
         allCards = set.cards;
         cards = getStudyCards();
@@ -87,7 +102,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 flashCard.addEventListener("click", event => {
-    if (event.target.closest("button")) return;
+    if (event.target.closest("button") || event.target === annotationCanvas) return;
     flipCard();
 });
 
@@ -270,6 +285,7 @@ function renderCurrentCard() {
     flashExampleSentence.hidden = !card.exampleSentence;
     flashCounter.textContent = `${currentIndex + 1} / ${cards.length}`;
     renderFavoriteState();
+    loadAnnotationForCurrentCard();
 
     if (trackProgressToggle.checked) {
         localStorage.setItem("words-up-flash-progress", JSON.stringify({ currentIndex, total: cards.length }));
@@ -690,11 +706,6 @@ function waitForPronunciationStart(milliseconds) {
 }
 
 async function getForvoAudioUrl(word, language, accent) {
-    const cacheKey = `${language}:${accent || "default"}:${word.toLowerCase()}`;
-    if (pronunciationCache.has(cacheKey)) {
-        return pronunciationCache.get(cacheKey);
-    }
-
     try {
         const url = new URL(PRONUNCIATION_API_URL, window.location.origin);
         url.searchParams.set("word", word);
@@ -706,16 +717,12 @@ async function getForvoAudioUrl(word, language, accent) {
             headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
         });
         if (!response.ok) {
-            pronunciationCache.set(cacheKey, null);
             return null;
         }
         const data = await response.json();
-        const audioUrl = data.audioUrl || null;
-        pronunciationCache.set(cacheKey, audioUrl);
-        return audioUrl;
+        return data.audioUrl || null;
     } catch (error) {
         console.warn("Forvo pronunciation failed:", error);
-        pronunciationCache.set(cacheKey, null);
         return null;
     }
 }
@@ -764,4 +771,273 @@ function showEmptyState(message = "No cards yet") {
     document.querySelector(".flash-controls").hidden = true;
     emptyState.hidden = false;
     emptyState.querySelector("h1").textContent = message;
+}
+
+function initializeAnnotationTools() {
+    updateAnnotationLayerState();
+    resizeAnnotationCanvas();
+
+    new ResizeObserver(() => resizeAnnotationCanvas()).observe(flashCard);
+
+    annotationLayerToggle.addEventListener("click", () => {
+        annotationLayerVisible = !annotationLayerVisible;
+        localStorage.setItem("words-up-annotation-layer-visible", String(annotationLayerVisible));
+        if (!annotationLayerVisible) setActiveAnnotationTool(null);
+        updateAnnotationLayerState();
+    });
+
+    annotationToolButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            if (!annotationLayerVisible) {
+                annotationLayerVisible = true;
+                localStorage.setItem("words-up-annotation-layer-visible", "true");
+                updateAnnotationLayerState();
+            }
+            setActiveAnnotationTool(button.dataset.annotationTool);
+        });
+    });
+
+    annotationDoneButton.addEventListener("click", () => setActiveAnnotationTool(null));
+    annotationClearButton.addEventListener("click", () => {
+        if (!annotationStrokes.length || !window.confirm("Clear all notes on this card?")) return;
+        annotationStrokes = [];
+        redrawAnnotations();
+        cacheAndScheduleAnnotationSave();
+    });
+
+    annotationCanvas.addEventListener("pointerdown", startAnnotationStroke);
+    annotationCanvas.addEventListener("pointermove", continueAnnotationStroke);
+    annotationCanvas.addEventListener("pointerup", finishAnnotationStroke);
+    annotationCanvas.addEventListener("pointercancel", finishAnnotationStroke);
+}
+
+function updateAnnotationLayerState() {
+    annotationCanvas.classList.toggle("is-hidden", !annotationLayerVisible);
+    annotationLayerToggle.setAttribute("aria-pressed", String(annotationLayerVisible));
+    annotationLayerToggle.textContent = annotationLayerVisible ? "Hide notes" : "Show notes";
+}
+
+function setActiveAnnotationTool(tool) {
+    activeAnnotationTool = tool;
+    annotationCanvas.classList.toggle("is-drawing", Boolean(tool) && annotationLayerVisible);
+    annotationToolButtons.forEach(button => {
+        button.classList.toggle("active", button.dataset.annotationTool === tool);
+    });
+    annotationDoneButton.hidden = !tool;
+}
+
+function startAnnotationStroke(event) {
+    if (!activeAnnotationTool || !annotationLayerVisible) return;
+    event.preventDefault();
+    event.stopPropagation();
+    annotationCanvas.setPointerCapture(event.pointerId);
+    currentAnnotationStroke = createAnnotationStroke(activeAnnotationTool, getAnnotationPoint(event));
+    annotationStrokes.push(currentAnnotationStroke);
+    redrawAnnotations();
+}
+
+function continueAnnotationStroke(event) {
+    if (!currentAnnotationStroke || !annotationCanvas.hasPointerCapture(event.pointerId)) return;
+    event.preventDefault();
+    currentAnnotationStroke.points.push(getAnnotationPoint(event));
+    redrawAnnotations();
+}
+
+function finishAnnotationStroke(event) {
+    if (!currentAnnotationStroke) return;
+    event.preventDefault();
+    if (annotationCanvas.hasPointerCapture(event.pointerId)) {
+        annotationCanvas.releasePointerCapture(event.pointerId);
+    }
+    currentAnnotationStroke = null;
+    cacheAndScheduleAnnotationSave();
+}
+
+function createAnnotationStroke(tool, point) {
+    const styles = {
+        pencil: { color: "#5b7cff", opacity: 1, width: 0.008 },
+        marker: { color: "#ffe100", opacity: 0.34, width: 0.045 },
+        eraser: { color: "#000000", opacity: 1, width: 0.055 },
+    };
+    return { tool, ...styles[tool], points: [point] };
+}
+
+function getAnnotationPoint(event) {
+    const bounds = annotationCanvas.getBoundingClientRect();
+    return {
+        x: clampAnnotationCoordinate((event.clientX - bounds.left) / Math.max(bounds.width, 1)),
+        y: clampAnnotationCoordinate((event.clientY - bounds.top) / Math.max(bounds.height, 1)),
+    };
+}
+
+function clampAnnotationCoordinate(value) {
+    return Math.max(0, Math.min(1, Number(value) || 0));
+}
+
+function resizeAnnotationCanvas() {
+    const bounds = flashCard.getBoundingClientRect();
+    if (!bounds.width || !bounds.height) return;
+    const pixelRatio = Math.max(1, window.devicePixelRatio || 1);
+    annotationCanvas.width = Math.round(bounds.width * pixelRatio);
+    annotationCanvas.height = Math.round(bounds.height * pixelRatio);
+    annotationContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    redrawAnnotations();
+}
+
+function redrawAnnotations() {
+    const bounds = annotationCanvas.getBoundingClientRect();
+    if (!bounds.width || !bounds.height) return;
+    annotationContext.clearRect(0, 0, bounds.width, bounds.height);
+    annotationStrokes.forEach(stroke => drawAnnotationStroke(stroke, bounds));
+    annotationContext.globalCompositeOperation = "source-over";
+    annotationContext.globalAlpha = 1;
+}
+
+function drawAnnotationStroke(stroke, bounds) {
+    if (!stroke.points?.length) return;
+    annotationContext.save();
+    annotationContext.globalCompositeOperation = stroke.tool === "eraser" ? "destination-out" : "source-over";
+    annotationContext.globalAlpha = stroke.opacity ?? 1;
+    annotationContext.strokeStyle = stroke.color || "#5b7cff";
+    annotationContext.fillStyle = stroke.color || "#5b7cff";
+    annotationContext.lineWidth = Math.max(2, (stroke.width || 0.008) * Math.min(bounds.width, bounds.height));
+    annotationContext.lineCap = "round";
+    annotationContext.lineJoin = "round";
+    annotationContext.beginPath();
+    const first = stroke.points[0];
+    annotationContext.moveTo(first.x * bounds.width, first.y * bounds.height);
+    stroke.points.slice(1).forEach(point => {
+        annotationContext.lineTo(point.x * bounds.width, point.y * bounds.height);
+    });
+    if (stroke.points.length === 1) {
+        annotationContext.arc(first.x * bounds.width, first.y * bounds.height,
+                annotationContext.lineWidth / 2, 0, Math.PI * 2);
+        annotationContext.fill();
+    } else {
+        annotationContext.stroke();
+    }
+    annotationContext.restore();
+}
+
+async function loadAnnotationForCurrentCard() {
+    const card = cards[currentIndex];
+    if (!card) return;
+    const key = getAnnotationKey(card);
+    const token = ++annotationLoadToken;
+    setActiveAnnotationTool(null);
+    annotationSaveStatus.textContent = "";
+
+    if (annotationCache.has(key)) {
+        annotationStrokes = cloneAnnotationStrokes(annotationCache.get(key));
+        redrawAnnotations();
+        return;
+    }
+
+    let strokes = [];
+    const authToken = localStorage.getItem("token") || "";
+    if (card.id && authToken) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/annotations/card/${encodeURIComponent(card.id)}`, {
+                headers: { Authorization: `Bearer ${authToken}` },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                strokes = parseAnnotationData(data.drawingData);
+            } else {
+                strokes = loadLocalAnnotation(card);
+            }
+        } catch (error) {
+            console.warn("Annotation load failed, using local copy:", error);
+            strokes = loadLocalAnnotation(card);
+        }
+    } else {
+        strokes = loadLocalAnnotation(card);
+    }
+
+    annotationCache.set(key, strokes);
+    if (token !== annotationLoadToken || getAnnotationKey(cards[currentIndex]) !== key) return;
+    annotationStrokes = cloneAnnotationStrokes(strokes);
+    redrawAnnotations();
+}
+
+function cacheAndScheduleAnnotationSave() {
+    const card = cards[currentIndex];
+    if (!card) return;
+    const key = getAnnotationKey(card);
+    const snapshot = cloneAnnotationStrokes(annotationStrokes);
+    annotationCache.set(key, snapshot);
+    annotationSaveStatus.textContent = "Saving...";
+    window.clearTimeout(annotationSaveTimers.get(key));
+    annotationSaveTimers.set(key, window.setTimeout(() => saveAnnotation(card, key, snapshot), 500));
+}
+
+async function saveAnnotation(card, key, strokes) {
+    const drawingData = JSON.stringify(strokes);
+    const authToken = localStorage.getItem("token") || "";
+    let savedInDatabase = false;
+
+    if (card.id && authToken) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/annotations/card/${encodeURIComponent(card.id)}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${authToken}`,
+                },
+                body: JSON.stringify({ drawingData }),
+            });
+            savedInDatabase = response.ok;
+        } catch (error) {
+            console.warn("Annotation save failed, keeping a local copy:", error);
+        }
+    }
+
+    if (!savedInDatabase) {
+        localStorage.setItem(getAnnotationLocalStorageKey(card), drawingData);
+    }
+    annotationSaveTimers.delete(key);
+    if (cards[currentIndex] && getAnnotationKey(cards[currentIndex]) === key) {
+        annotationSaveStatus.textContent = savedInDatabase ? "Saved" : "Saved on this device";
+    }
+}
+
+function loadLocalAnnotation(card) {
+    return parseAnnotationData(localStorage.getItem(getAnnotationLocalStorageKey(card)) || "[]");
+}
+
+function getAnnotationKey(card) {
+    return card?.annotationKey || (card?.id ? `remote-${card.id}` : `local-${currentIndex}`);
+}
+
+function getAnnotationLocalStorageKey(card) {
+    const setKey = new URLSearchParams(window.location.search).get("setId")
+            || new URLSearchParams(window.location.search).get("localSetId")
+            || "draft";
+    return `${ANNOTATION_LOCAL_PREFIX}${setKey}:${getAnnotationKey(card)}`;
+}
+
+function parseAnnotationData(value) {
+    try {
+        const parsed = typeof value === "string" ? JSON.parse(value) : value;
+        if (!Array.isArray(parsed)) return [];
+        return parsed.slice(-1_000).map(stroke => ({
+            tool: ["pencil", "marker", "eraser"].includes(stroke?.tool) ? stroke.tool : "pencil",
+            color: String(stroke?.color || "#5b7cff").slice(0, 30),
+            opacity: Math.max(0, Math.min(1, Number(stroke?.opacity) || 1)),
+            width: Math.max(0.002, Math.min(0.1, Number(stroke?.width) || 0.008)),
+            points: (Array.isArray(stroke?.points) ? stroke.points : []).slice(-10_000).map(point => ({
+                x: clampAnnotationCoordinate(point?.x),
+                y: clampAnnotationCoordinate(point?.y),
+            })),
+        })).filter(stroke => stroke.points.length);
+    } catch {
+        return [];
+    }
+}
+
+function cloneAnnotationStrokes(strokes) {
+    return strokes.map(stroke => ({
+        ...stroke,
+        points: stroke.points.map(point => ({ ...point })),
+    }));
 }

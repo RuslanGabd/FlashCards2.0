@@ -352,6 +352,69 @@ body {
     padding: 2.25rem 3rem;
     cursor: pointer;
     transition: transform 0.25s ease, background 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.flash-study-card > :not(.flash-annotation-canvas) {
+    position: relative;
+    z-index: 1;
+}
+
+.flash-annotation-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+    touch-action: none;
+}
+
+.flash-annotation-canvas.is-drawing {
+    cursor: crosshair;
+    pointer-events: auto;
+}
+
+.flash-annotation-canvas.is-hidden {
+    display: none;
+}
+
+.annotation-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+}
+
+.annotation-controls button {
+    min-height: 36px;
+    border: 1px solid rgba(158, 172, 255, 0.45);
+    border-radius: 999px;
+    background: #303b5b;
+    color: #f4f6ff;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 900;
+    padding: 0 0.9rem;
+}
+
+.annotation-controls button:hover,
+.annotation-controls button.active {
+    border-color: #8fa2ff;
+    background: #4257ff;
+}
+
+.annotation-controls button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.annotation-save-status {
+    color: #9eacff;
+    font-size: 0.82rem;
+    font-weight: 800;
 }
 
 .study-timer-panel {
@@ -1333,6 +1396,22 @@ body {
 
 .typing-card {
     min-height: 430px;
+}
+
+.typing-example-sentence {
+    margin: -0.35rem 0 1rem;
+    color: #59627d;
+    font-size: 1.1rem;
+    font-style: italic;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.typing-example-sentence::before {
+    content: "Example: ";
+    color: #4257ff;
+    font-style: normal;
+    font-weight: 900;
 }
 
 .typing-answer-form {
