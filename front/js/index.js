@@ -1,4 +1,6 @@
 const EDITOR_DRAFT_KEY = "words-up-editor-draft";
+const CURRENT_LOCAL_SET_ID_KEY = "words-up-current-local-set-id";
+const CURRENT_REMOTE_SET_ID_KEY = "words-up-current-remote-set-id";
 const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8085" : "";
 
 const localTranslations = {
@@ -60,7 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        localStorage.setItem(EDITOR_DRAFT_KEY, JSON.stringify({
+        startNewEditorDraft({
             cards,
             diagram: null,
             meta: {
@@ -68,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 description: aiSet.description || `Generated from pasted text: ${cards.length} cards`,
                 isPublic: true,
             },
-        }));
+        });
 
         window.location.href = "edit-set.html";
     });
@@ -124,6 +126,12 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
         });
 });
+
+function startNewEditorDraft(draft) {
+    localStorage.removeItem(CURRENT_LOCAL_SET_ID_KEY);
+    localStorage.removeItem(CURRENT_REMOTE_SET_ID_KEY);
+    localStorage.setItem(EDITOR_DRAFT_KEY, JSON.stringify(draft));
+}
 
 document.addEventListener("click", event => {
     if (event.target.closest("a, button, input, select, textarea")) return;
