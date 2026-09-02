@@ -286,6 +286,43 @@ body {
     padding: 1.6rem 0 2rem;
 }
 
+.flash-study-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.8rem;
+}
+
+.flash-home-link {
+    width: 46px;
+    height: 46px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 50%;
+    background: #303b5b;
+    color: #4fd1ff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+    transition: transform 0.18s ease, background 0.18s ease;
+}
+
+.flash-home-link:hover {
+    background: #3b486d;
+    transform: translateY(-1px);
+}
+
+.flash-home-link:focus-visible {
+    outline: 3px solid #a8b2ff;
+    outline-offset: 3px;
+}
+
+.flash-home-link svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}
+
 .mode-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(180px, 1fr));
@@ -1090,7 +1127,7 @@ body {
     position: relative;
 }
 
-.quick-create button {
+.quick-create-dismiss {
     position: absolute;
     right: 1rem;
     top: 0.8rem;
@@ -1229,6 +1266,32 @@ body {
 .secondary-study-link {
     color: var(--latest-blue);
     border-color: #e6e8ef;
+}
+
+.delete-set-button {
+    min-height: 42px;
+    border: 1px solid #f1c4ca;
+    border-radius: 6px;
+    background: white;
+    color: #bd0c12;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 900;
+    padding: 0.65rem 1rem;
+}
+
+.delete-set-button:hover {
+    background: #fff0f1;
+}
+
+.delete-set-button:focus-visible {
+    outline: 3px solid rgba(189, 12, 18, 0.25);
+    outline-offset: 2px;
+}
+
+.delete-set-button:disabled {
+    cursor: wait;
+    opacity: 0.65;
 }
 
 .set-thumb {

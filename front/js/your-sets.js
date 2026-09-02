@@ -3,6 +3,7 @@ const LOCAL_SETS_KEY = "words-up-local-sets";
 const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8085" : "";
 
 let librarySets = [];
+let remoteSetsManageable = false;
 
 const searchInput = document.getElementById("sets-search");
 const draftContainer = document.getElementById("draft-sets-container");
@@ -93,6 +94,7 @@ function renderLocalSets() {
             <div class="set-actions">
                 <a class="study-link" href="flashcards.html?localSetId=${encodeURIComponent(set.id)}">Study</a>
                 <a class="study-link secondary-study-link" href="edit-set.html?localSetId=${encodeURIComponent(set.id)}">Edit</a>
+                <button class="delete-set-button" data-delete-local-set-id="${escapeHtml(set.id)}" type="button">Delete</button>
             </div>
         `;
         localContainer.appendChild(item);
@@ -106,6 +108,7 @@ async function loadSavedSets() {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (!response.ok) throw new Error("Failed to fetch sets");
+        remoteSetsManageable = Boolean(token);
         librarySets = await response.json();
         renderPublicSets(librarySets);
     } catch (error) {
@@ -159,19 +162,73 @@ function renderPublicSets(sets) {
             <div class="set-actions">
                 <a class="study-link" href="flashcards.html?setId=${encodeURIComponent(set.id)}">Study</a>
                 <a class="study-link secondary-study-link" href="edit-set.html?setId=${encodeURIComponent(set.id)}">Edit</a>
+                ${remoteSetsManageable
+                    ? `<button class="delete-set-button" data-delete-remote-set-id="${encodeURIComponent(set.id)}" type="button">Delete</button>`
+                    : ""}
             </div>
         `;
         savedSetsContainer.appendChild(item);
     });
 }
 
-document.addEventListener("click", event => {
+document.addEventListener("click", async event => {
+    const localDeleteButton = event.target.closest("[data-delete-local-set-id]");
+    if (localDeleteButton) {
+        deleteLocalSet(localDeleteButton.dataset.deleteLocalSetId);
+        return;
+    }
+
+    const remoteDeleteButton = event.target.closest("[data-delete-remote-set-id]");
+    if (remoteDeleteButton) {
+        await deleteRemoteSet(remoteDeleteButton.dataset.deleteRemoteSetId, remoteDeleteButton);
+        return;
+    }
+
     if (event.target.closest("a, button, input, select, textarea")) return;
 
     const setItem = event.target.closest(".clickable-set");
     if (!setItem?.dataset.setUrl) return;
     window.location.href = setItem.dataset.setUrl;
 });
+
+async function deleteRemoteSet(setId, button) {
+    const set = librarySets.find(item => String(item.id) === String(setId));
+    if (!window.confirm(`Delete "${set?.title || "this set"}"? This action cannot be undone.`)) return;
+
+    button.disabled = true;
+    button.textContent = "Deleting...";
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/sets/${encodeURIComponent(setId)}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${getAuthToken()}` },
+        });
+        if (!response.ok) throw new Error("Failed to delete set");
+
+        librarySets = librarySets.filter(item => String(item.id) !== String(setId));
+        if (localStorage.getItem("words-up-current-remote-set-id") === String(setId)) {
+            localStorage.removeItem("words-up-current-remote-set-id");
+        }
+        renderPublicSets(librarySets);
+    } catch (error) {
+        console.error("Error deleting set:", error);
+        button.disabled = false;
+        button.textContent = "Delete";
+        window.alert("Could not delete the set. Please try again.");
+    }
+}
+
+function deleteLocalSet(setId) {
+    const localSets = loadLocalSets();
+    const set = localSets.find(item => String(item.id) === String(setId));
+    if (!window.confirm(`Delete "${set?.title || "this set"}"? This action cannot be undone.`)) return;
+
+    const remainingSets = localSets.filter(item => String(item.id) !== String(setId));
+    localStorage.setItem(LOCAL_SETS_KEY, JSON.stringify(remainingSets));
+    if (localStorage.getItem("words-up-current-local-set-id") === String(setId)) {
+        localStorage.removeItem("words-up-current-local-set-id");
+    }
+    renderLocalSets();
+}
 
 function loadDraft() {
     try {
