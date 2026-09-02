@@ -6,6 +6,7 @@ const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:80
 const DICTIONARY_LOOKUP_URL = `${API_BASE_URL}/api/dictionary/lookup`;
 const AI_CREATE_SET_URL = `${API_BASE_URL}/api/ai/create-set`;
 const AI_EXAMPLE_URL = `${API_BASE_URL}/api/ai/example`;
+const ANNOTATION_LOCAL_PREFIX = "words-up-card-annotation:";
 
 const termSuggestionWords = [
     "accomplish", "achieve", "answer", "beautiful", "become", "build", "change", "close",
@@ -22,7 +23,7 @@ const defaultCards = [
 ];
 
 const draft = loadDraft();
-let cards = draft.cards;
+let cards = draft.cards.map(ensureCardClientId);
 let diagram = draft.diagram;
 let setMeta = draft.meta;
 let searchQuery = "";
@@ -294,6 +295,7 @@ document.addEventListener("click", event => {
 });
 
 function renderCards() {
+    cards = cards.map(ensureCardClientId);
     const duplicateTermCounts = getDuplicateTermCounts(cards);
     const visibleCards = cards
         .map((card, index) => ({ card, index }))
@@ -1005,7 +1007,9 @@ async function saveRemoteSet() {
     }
 
     const saved = await response.json();
+    const sourceSetKey = localStorage.getItem(CURRENT_LOCAL_SET_ID_KEY) || "draft";
     localStorage.setItem(CURRENT_REMOTE_SET_ID_KEY, String(saved.id));
+    await syncLocalAnnotations(saved.id, sourceSetKey);
     return { id: saved.id, remote: true };
 }
 
@@ -1016,12 +1020,77 @@ function createSetPayload() {
         public: setMeta.isPublic !== false,
         cards: cards
             .map(card => ({
+                clientId: ensureCardClientId(card).clientId,
                 term: String(card.term || "").trim(),
                 definition: String(card.definition || "").trim(),
                 exampleSentence: String(card.exampleSentence || "").trim(),
             }))
             .filter(card => card.term || card.definition),
     };
+}
+
+async function syncLocalAnnotations(remoteSetId, sourceSetKey) {
+    const token = getAuthToken();
+    if (!token) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/flashcards/set/${encodeURIComponent(remoteSetId)}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) return;
+        const remoteCards = await response.json();
+
+        for (const remoteCard of remoteCards) {
+            if (!remoteCard.id || !remoteCard.clientId) continue;
+            const localIndex = cards.findIndex(card => card.clientId === remoteCard.clientId);
+            const localCard = localIndex >= 0 ? cards[localIndex] : null;
+            const keys = [
+                `${ANNOTATION_LOCAL_PREFIX}${sourceSetKey}:client-${remoteCard.clientId}`,
+            ];
+            if (localCard) {
+                keys.push(`${ANNOTATION_LOCAL_PREFIX}${sourceSetKey}:local-${localIndex}-${localCard.term}`);
+            }
+            const sourceKey = keys.find(key => localStorage.getItem(key) !== null);
+            if (!sourceKey) continue;
+
+            const drawingData = localStorage.getItem(sourceKey) || "[]";
+            const saveResponse = await fetch(
+                `${API_BASE_URL}/api/annotations/card/${encodeURIComponent(remoteCard.id)}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ drawingData }),
+                }
+            );
+            if (saveResponse.ok) {
+                keys.forEach(key => localStorage.removeItem(key));
+            }
+        }
+    } catch (error) {
+        console.warn("Local annotations will be synchronized on the next save:", error);
+    }
+}
+
+function ensureCardClientId(card) {
+    if (!card || typeof card !== "object") {
+        return { clientId: createCardClientId(), term: "", definition: "", exampleSentence: "", image: "" };
+    }
+    if (!card.clientId) {
+        card.clientId = createCardClientId();
+    }
+    return card;
+}
+
+function createCardClientId() {
+    if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, character => {
+        const random = Math.floor(Math.random() * 16);
+        const value = character === "x" ? random : (random & 0x3) | 0x8;
+        return value.toString(16);
+    });
 }
 
 function getAuthToken() {
@@ -1034,6 +1103,7 @@ function saveLocalSet() {
     const existingIndex = sets.findIndex(set => set.id === existingId);
     const normalizedCards = cards
         .map(card => ({
+            clientId: ensureCardClientId(card).clientId,
             term: String(card.term || "").trim(),
             definition: String(card.definition || "").trim(),
             exampleSentence: String(card.exampleSentence || "").trim(),
@@ -1102,7 +1172,13 @@ function loadDraft() {
 }
 
 async function loadRequestedSetForEditing() {
-    const setId = new URLSearchParams(window.location.search).get("setId");
+    const params = new URLSearchParams(window.location.search);
+    const setId = params.get("setId");
+    const localSetId = params.get("localSetId");
+    if (localSetId) {
+        loadLocalSetForEditing(localSetId);
+        return;
+    }
     if (!setId) return;
 
     const token = getAuthToken();
@@ -1127,6 +1203,7 @@ async function loadRequestedSetForEditing() {
         ]);
         cards = Array.isArray(remoteCards)
             ? remoteCards.map(card => ({
+                clientId: card.clientId || createCardClientId(),
                 term: String(card.term || ""),
                 definition: String(card.definition || ""),
                 exampleSentence: String(card.exampleSentence || ""),
@@ -1151,6 +1228,30 @@ async function loadRequestedSetForEditing() {
         console.error("Remote set edit load failed:", error);
         showToast("Could not load this set for editing");
     }
+}
+
+function loadLocalSetForEditing(localSetId) {
+    const localSet = loadLocalSets().find(set => set.id === localSetId);
+    if (!localSet) {
+        showToast("Could not load this local set");
+        return;
+    }
+
+    cards = (localSet.cards || []).map(ensureCardClientId);
+    setMeta = {
+        title: localSet.title || "",
+        description: localSet.description || "",
+        isPublic: localSet.isPublic !== false,
+    };
+    diagram = null;
+    localStorage.setItem(CURRENT_LOCAL_SET_ID_KEY, localSetId);
+    localStorage.removeItem(CURRENT_REMOTE_SET_ID_KEY);
+    setTitle.value = setMeta.title;
+    setDescription.value = setMeta.description;
+    renderVisibility();
+    renderDiagram();
+    renderCards();
+    saveDraft();
 }
 
 function createEmptyDraft() {

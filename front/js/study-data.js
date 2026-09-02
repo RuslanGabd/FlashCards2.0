@@ -41,6 +41,9 @@ function loadLocalStudySet(localSetId) {
         const sets = JSON.parse(localStorage.getItem(LOCAL_SETS_KEY));
         const set = Array.isArray(sets) ? sets.find(item => item.id === localSetId) : null;
         if (!set) return { title: "Local set", cards: [] };
+        if (ensureStudyCardClientIds(set.cards || [])) {
+            localStorage.setItem(LOCAL_SETS_KEY, JSON.stringify(sets));
+        }
         return {
             title: set.title || "Local set",
             cards: normalizeCards(set.cards || []),
@@ -53,6 +56,9 @@ function loadLocalStudySet(localSetId) {
 function loadDraftStudySet() {
     try {
         const draft = JSON.parse(localStorage.getItem(EDITOR_DRAFT_KEY));
+        if (draft && ensureStudyCardClientIds(draft.cards || [])) {
+            localStorage.setItem(EDITOR_DRAFT_KEY, JSON.stringify(draft));
+        }
         return {
             title: draft?.meta?.title || "Local draft",
             cards: normalizeCards(draft?.cards || []),
@@ -64,14 +70,39 @@ function loadDraftStudySet() {
 
 function normalizeCards(cards) {
     return (Array.isArray(cards) ? cards : [])
-        .map((card, index) => ({
+        .map((card, index) => {
+            const clientId = card.clientId || createStudyCardClientId();
+            return {
             id: Number.isFinite(Number(card.id)) ? Number(card.id) : null,
-            annotationKey: card.id ? `remote-${card.id}` : `local-${index}-${String(card.term || "").trim()}`,
+            clientId,
+            annotationKey: card.id ? `remote-${card.id}` : `client-${clientId}`,
+            legacyAnnotationKey: `local-${index}-${String(card.term || "").trim()}`,
             term: String(card.term || "").trim(),
             definition: String(card.definition || "").trim(),
             exampleSentence: String(card.exampleSentence || "").trim(),
-        }))
+            };
+        })
         .filter(card => card.term && card.definition);
+}
+
+function ensureStudyCardClientIds(cards) {
+    let changed = false;
+    cards.forEach(card => {
+        if (!card.clientId) {
+            card.clientId = createStudyCardClientId();
+            changed = true;
+        }
+    });
+    return changed;
+}
+
+function createStudyCardClientId() {
+    if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, character => {
+        const random = Math.floor(Math.random() * 16);
+        const value = character === "x" ? random : (random & 0x3) | 0x8;
+        return value.toString(16);
+    });
 }
 
 function shuffleItems(items) {

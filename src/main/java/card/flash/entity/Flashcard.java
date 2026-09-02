@@ -15,6 +15,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Entity
@@ -32,6 +33,9 @@ public class Flashcard {
     private String term;
 
     private String definition;
+
+    @Column(name = "client_id", nullable = false, length = 36)
+    private String clientId;
 
     @Column(name = "example_sentence", length = 2_000)
     private String exampleSentence;
@@ -54,6 +58,13 @@ public class Flashcard {
 
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @PrePersist
+    void ensureClientId() {
+        if (clientId == null || clientId.isBlank()) {
+            clientId = UUID.randomUUID().toString();
+        }
+    }
 
 
     // Getters and setters (or use Lombok)

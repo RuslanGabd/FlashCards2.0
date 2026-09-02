@@ -8,5 +8,6 @@ public class FlashcardDto {
     private String term;
     private String definition;
     private String exampleSentence;
+    private String clientId;
     private Long setId;
 }

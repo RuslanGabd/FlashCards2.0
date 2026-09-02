@@ -17,6 +17,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/flashcards")
@@ -58,6 +59,7 @@ public class FlashcardController {
         card.setTerm(request.term());
         card.setDefinition(request.definition());
         card.setExampleSentence(request.exampleSentence());
+        card.setClientId(request.clientId() == null ? UUID.randomUUID().toString() : request.clientId());
         card.setSet(set);
 
         return FlashcardMapper.toDto(flashcardService.save(card));

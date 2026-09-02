@@ -11,6 +11,7 @@ public class FlashcardMapper {
         dto.setTerm(entity.getTerm());
         dto.setDefinition(entity.getDefinition());
         dto.setExampleSentence(entity.getExampleSentence());
+        dto.setClientId(entity.getClientId());
 
         if (entity.getSet() != null) {
             dto.setSetId(entity.getSet().getId());
@@ -25,6 +26,7 @@ public class FlashcardMapper {
         flashcard.setTerm(dto.getTerm());
         flashcard.setDefinition(dto.getDefinition());
         flashcard.setExampleSentence(dto.getExampleSentence());
+        flashcard.setClientId(dto.getClientId());
         // You must manually set the FlashcardSet later (in controller/service)
         return flashcard;
     }

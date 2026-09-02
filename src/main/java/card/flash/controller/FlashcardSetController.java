@@ -22,7 +22,7 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/sets")
@@ -146,19 +146,38 @@ public class FlashcardSetController {
         set.setTitle(request.title());
         set.setDescription(request.description());
         set.setPublic(request.publicSet());
-        set.getCards().clear();
 
         if (request.cards() == null) {
+            set.getCards().clear();
             return;
         }
 
+        Map<String, Flashcard> existingByClientId = new HashMap<>();
+        set.getCards().stream()
+                .filter(card -> card.getClientId() != null && !card.getClientId().isBlank())
+                .forEach(card -> existingByClientId.put(card.getClientId(), card));
+
+        Set<Flashcard> retainedCards = new HashSet<>();
+        Set<String> requestClientIds = new HashSet<>();
         for (FlashcardRequest cardRequest : request.cards()) {
-            Flashcard card = new Flashcard();
+            String clientId = cardRequest.clientId() == null
+                    ? UUID.randomUUID().toString()
+                    : cardRequest.clientId();
+            if (!requestClientIds.add(clientId)) {
+                throw new IllegalArgumentException("Duplicate card clientId");
+            }
+
+            Flashcard card = existingByClientId.getOrDefault(clientId, new Flashcard());
+            card.setClientId(clientId);
             card.setTerm(cardRequest.term());
             card.setDefinition(cardRequest.definition());
             card.setExampleSentence(cardRequest.exampleSentence());
             card.setSet(set);
-            set.getCards().add(card);
+            retainedCards.add(card);
+            if (card.getId() == null) {
+                set.getCards().add(card);
+            }
         }
+        set.getCards().removeIf(card -> !retainedCards.contains(card));
     }
 }

@@ -18,7 +18,11 @@ const favoriteTerms = new Set(JSON.parse(localStorage.getItem("words-up-favorite
 let flashSettings = JSON.parse(localStorage.getItem("words-up-flash-settings") || "{}");
 const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8085" : "";
 const PRONUNCIATION_API_URL = `${API_BASE_URL}/api/pronunciation`;
+const DICTIONARY_LOOKUP_URL = `${API_BASE_URL}/api/dictionary/lookup`;
+const LEADING_ENGLISH_PREPOSITION = /^(?:aboard|about|above|across|after|against|along|alongside|amid|amidst|among|amongst|around|as|at|before|behind|below|beneath|beside|between|beyond|by|concerning|considering|despite|down|during|except|excluding|following|for|from|in|including|inside|into|like|minus|near|notwithstanding|of|off|on|onto|opposite|out|outside|over|past|per|plus|regarding|round|save|since|than|through|throughout|till|to|toward|towards|under|underneath|unlike|until|up|upon|versus|via|with|within|without|worth)\s+/i;
 const ANNOTATION_LOCAL_PREFIX = "words-up-card-annotation:";
+const transcriptionCache = new Map();
+let transcriptionRequestToken = 0;
 const annotationCache = new Map();
 const annotationSaveTimers = new Map();
 let annotationStrokes = [];
@@ -29,6 +33,7 @@ let annotationLayerVisible = localStorage.getItem("words-up-annotation-layer-vis
 
 const flashCard = document.getElementById("flash-study-card");
 const flashFace = document.getElementById("flash-card-face");
+const flashTranscription = document.getElementById("flash-card-transcription");
 const flashHint = document.getElementById("flash-card-hint");
 const flashExampleSentence = document.getElementById("flash-example-sentence");
 const annotationCanvas = document.getElementById("flash-annotation-canvas");
@@ -41,6 +46,7 @@ const annotationSaveStatus = document.getElementById("annotation-save-status");
 const flashCounter = document.getElementById("flash-counter");
 const emptyState = document.getElementById("flash-empty-state");
 const hintButton = document.getElementById("hint-button");
+const transcriptionButton = document.getElementById("transcription-button");
 const speakButton = document.getElementById("speak-button");
 const favoriteButton = document.getElementById("favorite-button");
 const flipButton = document.getElementById("flip-card-button");
@@ -120,10 +126,12 @@ hintButton.addEventListener("click", () => {
     flashHint.textContent = getHint(isBackSide ? card.term : card.definition);
 });
 
+transcriptionButton.addEventListener("click", toggleCurrentCardTranscription);
+
 speakButton.addEventListener("click", async () => {
     const card = cards[currentIndex];
     if (!card) return;
-    await speakCurrentCardSide(card);
+    await speakCurrentCardSide(card, true);
 });
 
 favoriteButton.addEventListener("click", () => {
@@ -265,7 +273,8 @@ document.addEventListener("keydown", event => {
         flipCard();
     }
     if (event.key.toLowerCase() === "h") shuffleCards();
-    if (event.key.toLowerCase() === "a") speakButton.click();
+    if (event.key.toLowerCase() === "q") speakButton.click();
+    if (event.key.toLowerCase() === "w") transcriptionButton.click();
     if (event.key.toLowerCase() === "p") playButton.click();
     if (event.key.toLowerCase() === "t") setFrontSide("term");
     if (event.key.toLowerCase() === "d") setFrontSide("definition");
@@ -281,6 +290,7 @@ function renderCurrentCard() {
     flashFace.textContent = getCardFace(card);
     flashHint.hidden = true;
     flashHint.textContent = "";
+    hideTranscription();
     flashExampleSentence.textContent = card.exampleSentence || "";
     flashExampleSentence.hidden = !card.exampleSentence;
     flashCounter.textContent = `${currentIndex + 1} / ${cards.length}`;
@@ -318,6 +328,88 @@ function showPreviousCard() {
 function renderFavoriteState() {
     const term = cards[currentIndex]?.term;
     favoriteButton.classList.toggle("active", favoriteTerms.has(term));
+}
+
+async function toggleCurrentCardTranscription() {
+    if (!flashTranscription.hidden) {
+        hideTranscription();
+        return;
+    }
+
+    const card = cards[currentIndex];
+    const term = String(card?.term || "").trim();
+    if (!term) return;
+
+    const authToken = localStorage.getItem("token") || "";
+    if (!authToken) {
+        showTranscriptionMessage("Log in to view transcription");
+        return;
+    }
+
+    const cacheKey = term.toLocaleLowerCase("en-US");
+    if (transcriptionCache.has(cacheKey)) {
+        renderTranscription(transcriptionCache.get(cacheKey));
+        return;
+    }
+
+    const requestToken = ++transcriptionRequestToken;
+    transcriptionButton.disabled = true;
+    showTranscriptionMessage("Loading transcription...");
+
+    try {
+        let transcription = await requestTranscription(term, authToken);
+        const baseWord = term.replace(LEADING_ENGLISH_PREPOSITION, "").trim();
+        if (!transcription && baseWord !== term) {
+            transcription = await requestTranscription(baseWord, authToken);
+        }
+        transcriptionCache.set(cacheKey, transcription);
+        if (requestToken !== transcriptionRequestToken || cards[currentIndex] !== card) return;
+        renderTranscription(transcription);
+    } catch (error) {
+        console.warn("Transcription lookup failed:", error);
+        if (requestToken === transcriptionRequestToken) {
+            showTranscriptionMessage("Transcription is unavailable");
+        }
+    } finally {
+        if (requestToken === transcriptionRequestToken) {
+            transcriptionButton.disabled = false;
+        }
+    }
+}
+
+async function requestTranscription(term, authToken) {
+    const response = await fetch(DICTIONARY_LOOKUP_URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ words: [term], lang: "en-ru" }),
+    });
+    if (!response.ok) throw new Error("Dictionary lookup failed");
+    const data = await response.json();
+    return String(data.items?.[0]?.transcription || "").trim();
+}
+
+function renderTranscription(value) {
+    const transcription = String(value || "").replace(/^[/\[]+|[/\]]+$/g, "").trim();
+    showTranscriptionMessage(transcription ? `/${transcription}/` : "No transcription found");
+}
+
+function showTranscriptionMessage(message) {
+    flashTranscription.textContent = message;
+    flashTranscription.hidden = false;
+    transcriptionButton.classList.add("active");
+    transcriptionButton.setAttribute("aria-pressed", "true");
+}
+
+function hideTranscription() {
+    transcriptionRequestToken += 1;
+    flashTranscription.hidden = true;
+    flashTranscription.textContent = "";
+    transcriptionButton.disabled = false;
+    transcriptionButton.classList.remove("active");
+    transcriptionButton.setAttribute("aria-pressed", "false");
 }
 
 function getHint(value) {
@@ -399,7 +491,7 @@ function autoSpeakCurrentCard() {
         if (token !== autoSpeakToken || !cards[currentIndex] || !ttsToggle.checked) {
             return;
         }
-        speakCurrentCardSide(cards[currentIndex]);
+        speakCurrentCardSide(cards[currentIndex], false);
     }, 120);
 }
 
@@ -566,7 +658,7 @@ function playCountdownDoneSound() {
     }
 }
 
-async function speakCurrentCardSide(card) {
+async function speakCurrentCardSide(card, manualPlayback = false) {
     const playbackToken = ++pronunciationPlaybackToken;
     stopActivePronunciation();
 
@@ -578,8 +670,7 @@ async function speakCurrentCardSide(card) {
     }
 
     const isRussianSide = side === "definition";
-    if (!canUseTextToSpeech(isRussianSide ? "ru" : "en")) {
-        showFlashMessage("Text to speech is turned off");
+    if (!manualPlayback && !canUseTextToSpeech(isRussianSide ? "ru" : "en")) {
         return;
     }
 
@@ -1002,18 +1093,28 @@ async function saveAnnotation(card, key, strokes) {
 }
 
 function loadLocalAnnotation(card) {
-    return parseAnnotationData(localStorage.getItem(getAnnotationLocalStorageKey(card)) || "[]");
+    const primaryKey = getAnnotationLocalStorageKey(card);
+    let drawingData = localStorage.getItem(primaryKey);
+    if (drawingData === null && card?.legacyAnnotationKey) {
+        const legacyKey = getAnnotationLocalStorageKey(card, card.legacyAnnotationKey);
+        drawingData = localStorage.getItem(legacyKey);
+        if (drawingData !== null) {
+            localStorage.setItem(primaryKey, drawingData);
+            localStorage.removeItem(legacyKey);
+        }
+    }
+    return parseAnnotationData(drawingData || "[]");
 }
 
 function getAnnotationKey(card) {
     return card?.annotationKey || (card?.id ? `remote-${card.id}` : `local-${currentIndex}`);
 }
 
-function getAnnotationLocalStorageKey(card) {
+function getAnnotationLocalStorageKey(card, annotationKey = getAnnotationKey(card)) {
     const setKey = new URLSearchParams(window.location.search).get("setId")
             || new URLSearchParams(window.location.search).get("localSetId")
             || "draft";
-    return `${ANNOTATION_LOCAL_PREFIX}${setKey}:${getAnnotationKey(card)}`;
+    return `${ANNOTATION_LOCAL_PREFIX}${setKey}:${annotationKey}`;
 }
 
 function parseAnnotationData(value) {

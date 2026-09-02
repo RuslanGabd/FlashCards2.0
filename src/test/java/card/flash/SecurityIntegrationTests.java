@@ -32,6 +32,18 @@ class SecurityIntegrationTests {
     @Autowired JwtUtil jwtUtil;
 
     @Test
+    void productionDomainIsAllowedByCors() throws Exception {
+        mockMvc.perform(options("/api/auth/login")
+                        .header("Origin", "https://mots.ink")
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers", "content-type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "https://mots.ink"))
+                .andExpect(header().string("Access-Control-Allow-Methods",
+                        org.hamcrest.Matchers.containsString("POST")));
+    }
+
+    @Test
     void externalApisRequireAuthenticationAndUseUnifiedErrorBody() throws Exception {
         mockMvc.perform(post("/api/ai/create-set")
                         .contentType(MediaType.APPLICATION_JSON)

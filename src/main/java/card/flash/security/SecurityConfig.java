@@ -57,6 +57,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/sets/**").authenticated()
                         .requestMatchers("/api/flashcards/**").authenticated()
                         .requestMatchers("/api/annotations/**").authenticated()
+                        .requestMatchers("/api/documents/**").authenticated()
                         .requestMatchers("/api/ai/**", "/api/dictionary/**", "/api/pronunciation/**").authenticated()
                         .anyRequest().permitAll()
                 )
@@ -72,6 +73,8 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
                 "http://127.0.0.1:*",
+                "https://mots.ink",
+                "https://www.mots.ink",
                 "https://*.ngrok-free.dev",
                 "https://*.ngrok.app"
         ));

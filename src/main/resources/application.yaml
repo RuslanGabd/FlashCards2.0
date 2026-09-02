@@ -1,6 +1,10 @@
 server:
-  port: 8085
+  port: 8080
 spring:
+  servlet:
+    multipart:
+      max-file-size: 12MB
+      max-request-size: 12MB
   datasource:
     url: jdbc:postgresql://localhost:5432/quizlet_db
     username: quizlet_user

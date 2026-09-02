@@ -35,11 +35,13 @@
                             <option value="uk">UK</option>
                         </select>
                     </label>
+                    <button id="transcription-button" type="button" aria-label="Show transcription" title="Show transcription">/ə/</button>
                     <button id="speak-button" type="button" aria-label="Listen pronunciation" title="Listen pronunciation">&#128266;</button>
                     <button id="favorite-button" type="button" aria-label="Favorite">★</button>
                 </div>
             </div>
             <p class="flash-card-face" id="flash-card-face">Loading...</p>
+            <p class="flash-card-transcription" id="flash-card-transcription" hidden></p>
             <p class="flash-card-hint" id="flash-card-hint" hidden></p>
             <canvas class="flash-annotation-canvas" id="flash-annotation-canvas" aria-label="Card annotations"></canvas>
           </section>
@@ -154,7 +156,8 @@
                 <div><span>Previous</span><kbd>←</kbd></div>
                 <div><span>Shuffle</span><kbd>H</kbd></div>
                 <div><span>Next</span><kbd>→</kbd></div>
-                <div><span>Audio</span><kbd>A</kbd></div>
+                <div><span>Audio</span><kbd>Q</kbd></div>
+                <div><span>Transcription</span><kbd>W</kbd></div>
                 <div><span>Play</span><kbd>P</kbd></div>
                 <div><span>Answer with term</span><kbd>T</kbd></div>
                 <div><span>Flip</span><kbd>Space</kbd></div>

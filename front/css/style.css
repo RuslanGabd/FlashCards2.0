@@ -1371,6 +1371,15 @@ body {
     font-weight: 900;
 }
 
+.flash-card-transcription {
+    color: #c6d0ff;
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    margin: 0.4rem 0;
+    text-align: center;
+}
+
 .flash-card-column {
     min-width: 0;
     display: grid;

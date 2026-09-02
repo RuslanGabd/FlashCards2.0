@@ -90,7 +90,10 @@ function renderLocalSets() {
                 <h3>${escapeHtml(set.title || "Untitled set")}</h3>
                 <p class="set-description">${escapeHtml(set.description || "Saved in this browser")}</p>
             </div>
-            <a class="study-link" href="flashcards.html?localSetId=${encodeURIComponent(set.id)}">Study</a>
+            <div class="set-actions">
+                <a class="study-link" href="flashcards.html?localSetId=${encodeURIComponent(set.id)}">Study</a>
+                <a class="study-link secondary-study-link" href="edit-set.html?localSetId=${encodeURIComponent(set.id)}">Edit</a>
+            </div>
         `;
         localContainer.appendChild(item);
     });

@@ -2,7 +2,9 @@ const EDITOR_DRAFT_KEY = "words-up-editor-draft";
 const MY_TEXTS_KEY = "words-up-my-texts";
 const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8085" : "";
 const DICTIONARY_LOOKUP_URL = `${API_BASE_URL}/api/dictionary/lookup`;
+const PDF_TEXT_URL = `${API_BASE_URL}/api/documents/pdf-text`;
 const TRANSLATION_CHUNK_SIZE = 25;
+const MAX_PDF_BYTES = 10 * 1024 * 1024;
 
 const dictionary = {
     a: "артикль / один",
@@ -152,11 +154,16 @@ sampleTextButton.addEventListener("click", () => {
     analyzeCurrentText();
 });
 
-textFile.addEventListener("change", () => {
+textFile.addEventListener("change", async () => {
     const file = textFile.files?.[0];
     if (!file) return;
 
     fileName.textContent = file.name;
+    if (isPdfFile(file)) {
+        await loadPdfFile(file);
+        return;
+    }
+
     const reader = new FileReader();
     reader.addEventListener("load", () => {
         sourceText.value = String(reader.result || "");
@@ -165,6 +172,63 @@ textFile.addEventListener("change", () => {
     });
     reader.readAsText(file);
 });
+
+async function loadPdfFile(file) {
+    if (file.size > MAX_PDF_BYTES) {
+        showToast("PDF file must not exceed 10 MB");
+        textFile.value = "";
+        return;
+    }
+
+    const token = localStorage.getItem("token") || "";
+    if (!token) {
+        showToast("Log in to process PDF files");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    textFile.disabled = true;
+    fileName.textContent = `Reading ${file.name}...`;
+
+    try {
+        const response = await fetch(PDF_TEXT_URL, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
+        });
+        if (!response.ok) {
+            throw new Error(await readApiError(response, "Could not read PDF"));
+        }
+
+        const result = await response.json();
+        sourceText.value = String(result.text || "");
+        if (!textTitle.value.trim()) {
+            textTitle.value = file.name.replace(/\.pdf$/i, "");
+        }
+        fileName.textContent = `${file.name} - ${result.pageCount} pages`;
+        await analyzeCurrentText();
+    } catch (error) {
+        console.error("PDF processing failed:", error);
+        fileName.textContent = file.name;
+        showToast(error.message || "Could not read PDF");
+    } finally {
+        textFile.disabled = false;
+    }
+}
+
+function isPdfFile(file) {
+    return file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+}
+
+async function readApiError(response, fallback) {
+    try {
+        const error = await response.json();
+        return error.message || fallback;
+    } catch {
+        return fallback;
+    }
+}
 
 loadUrlButton.addEventListener("click", async () => {
     const url = textUrl.value.trim();

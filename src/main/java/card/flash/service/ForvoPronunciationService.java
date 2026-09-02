@@ -18,6 +18,9 @@ import java.util.Locale;
 @Service
 public class ForvoPronunciationService {
 
+    private static final String LEADING_ENGLISH_PREPOSITION =
+            "(?i)^(?:aboard|about|above|across|after|against|along|alongside|amid|amidst|among|amongst|around|as|at|before|behind|below|beneath|beside|between|beyond|by|concerning|considering|despite|down|during|except|excluding|following|for|from|in|including|inside|into|like|minus|near|notwithstanding|of|off|on|onto|opposite|out|outside|over|past|per|plus|regarding|round|save|since|than|through|throughout|till|to|toward|towards|under|underneath|unlike|until|up|upon|versus|via|with|within|without|worth)\\s+";
+
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
             .build();
@@ -45,30 +48,57 @@ public class ForvoPronunciationService {
         }
 
         try {
-            if (!country.isBlank()) {
-                PronunciationResponse countryResult = requestPronunciation(
-                        buildPronunciationUri(normalizedWord, normalizedLanguage, "word-pronunciations", country),
-                        normalizedWord,
-                        normalizedLanguage,
-                        "forvo-" + country.toLowerCase(Locale.ROOT)
-                );
-                if (countryResult.audioUrl() != null) {
-                    return countryResult;
-                }
+            PronunciationResponse result = findPronunciation(normalizedWord, normalizedLanguage, country);
+            if (result.audioUrl() != null) {
+                return result;
             }
 
-            return requestPronunciation(
-                    buildPronunciationUri(normalizedWord, normalizedLanguage, "standard-pronunciation", ""),
-                    normalizedWord,
-                    normalizedLanguage,
-                    "forvo"
-            );
+            String baseWord = removeLeadingEnglishPreposition(normalizedWord, normalizedLanguage);
+            if (!baseWord.equals(normalizedWord)) {
+                PronunciationResponse baseWordResult = findPronunciation(baseWord, normalizedLanguage, country);
+                if (baseWordResult.audioUrl() != null) {
+                    return new PronunciationResponse(
+                            normalizedWord,
+                            normalizedLanguage,
+                            baseWordResult.audioUrl(),
+                            baseWordResult.source() + "-base-word"
+                    );
+                }
+            }
+            return emptyResult(normalizedWord, normalizedLanguage);
         } catch (IOException | InterruptedException exception) {
             if (exception instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
             return emptyResult(normalizedWord, normalizedLanguage);
         }
+    }
+
+    private PronunciationResponse findPronunciation(String word, String language, String country)
+            throws IOException, InterruptedException {
+        if (!country.isBlank()) {
+            PronunciationResponse countryResult = requestPronunciation(
+                    buildPronunciationUri(word, language, "word-pronunciations", country),
+                    word,
+                    language,
+                    "forvo-" + country.toLowerCase(Locale.ROOT)
+            );
+            if (countryResult.audioUrl() != null) {
+                return countryResult;
+            }
+        }
+
+        return requestPronunciation(
+                buildPronunciationUri(word, language, "standard-pronunciation", ""),
+                word,
+                language,
+                "forvo"
+        );
+    }
+
+    private String removeLeadingEnglishPreposition(String word, String language) {
+        if (!"en".equals(language)) return word;
+        return word.replaceFirst(LEADING_ENGLISH_PREPOSITION, "").trim();
     }
 
     private PronunciationResponse requestPronunciation(
