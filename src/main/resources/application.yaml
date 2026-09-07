@@ -42,3 +42,6 @@ deepseek:
 forvo:
   api-key: ${FORVO_API_KEY:0a0c7d3423137ba3a93106300b50224b}
   api-base-url: https://apifree.forvo.com
+  cache:
+    positive-ttl: PT720H
+    negative-ttl: PT24H

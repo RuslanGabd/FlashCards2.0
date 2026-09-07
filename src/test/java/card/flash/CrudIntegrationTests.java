@@ -44,11 +44,12 @@ class CrudIntegrationTests {
                         .header("Authorization", bearer)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"title":"Created set","description":"Initial","public":false,
+                                {"title":"Created set","description":"Initial","public":false,"language":"fr",
                                  "cards":[{"term":"one","definition":"один"}]}
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Created set"))
+                .andExpect(jsonPath("$.language").value("fr"))
                 .andReturn().getResponse().getContentAsString();
         long setId = objectMapper.readTree(createResponse).path("id").asLong();
         assertThat(setRepository.findById(setId)).isPresent();
@@ -57,11 +58,12 @@ class CrudIntegrationTests {
                         .header("Authorization", bearer)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"title":"Updated set","description":"Updated","public":true,
+                                {"title":"Updated set","description":"Updated","public":true,"language":"fr",
                                  "cards":[{"term":"two","definition":"два"}]}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title").value("Updated set"));
+                .andExpect(jsonPath("$.title").value("Updated set"))
+                .andExpect(jsonPath("$.language").value("fr"));
 
         String cardResponse = mockMvc.perform(post("/api/flashcards/set/{id}", setId)
                         .header("Authorization", bearer)

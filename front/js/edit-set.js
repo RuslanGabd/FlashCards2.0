@@ -36,6 +36,7 @@ let acceptedDuplicateTermCounts = getDuplicateTermCounts(cards);
 
 const setTitle = document.getElementById("set-title");
 const setDescription = document.getElementById("set-description");
+const setLanguage = document.getElementById("set-language");
 const visibilityButton = document.getElementById("visibility-button");
 const createButton = document.getElementById("create-button");
 const createPracticeButton = document.getElementById("create-practice-button");
@@ -63,6 +64,7 @@ const keyboardDialog = document.getElementById("keyboard-dialog");
 const closeKeyboard = document.getElementById("close-keyboard");
 const addAiDialog = document.getElementById("add-ai-dialog");
 const addAiText = document.getElementById("add-ai-text");
+const addAiLanguageHelp = document.getElementById("add-ai-language-help");
 const closeAddAi = document.getElementById("close-add-ai");
 const cancelAddAi = document.getElementById("cancel-add-ai");
 const applyAddAi = document.getElementById("apply-add-ai");
@@ -71,7 +73,9 @@ const toast = document.getElementById("toast");
 
 setTitle.value = setMeta.title;
 setDescription.value = setMeta.description;
+setLanguage.value = getSetLanguage();
 renderVisibility();
+renderLanguageDependentUi();
 renderDiagram();
 renderCards();
 loadRequestedSetForEditing();
@@ -112,6 +116,7 @@ addCardButton.addEventListener("click", () => {
 
 addByAiButton.addEventListener("click", () => {
     addAiText.value = "";
+    renderLanguageDependentUi();
     addAiDialog.showModal();
     addAiText.focus();
 });
@@ -160,6 +165,15 @@ setTitle.addEventListener("input", event => {
 setDescription.addEventListener("input", event => {
     setMeta.description = event.target.value;
     saveDraft();
+});
+
+setLanguage.addEventListener("change", event => {
+    setMeta.language = event.target.value === "fr" ? "fr" : "en";
+    dictionaryCache.clear();
+    reverseDictionaryCache.clear();
+    saveDraft();
+    renderLanguageDependentUi();
+    renderCards();
 });
 
 visibilityButton.addEventListener("click", () => {
@@ -326,12 +340,12 @@ function renderCards() {
             </div>
             <div class="editor-field">
                 <input class="${duplicateClass.trim()}" value="${escapeAttribute(card.term)}" aria-label="Term ${index + 1}" data-card-index="${index}" data-field="term" />
-                <span>TERM</span>
+                <span>${getSourceLanguageName().toUpperCase()} TERM</span>
                 <div class="editor-suggestions" data-suggestion-list="term" data-card-index="${index}" hidden></div>
             </div>
             <div class="editor-field">
                 <input value="${escapeAttribute(card.definition)}" aria-label="Definition ${index + 1}" data-card-index="${index}" data-field="definition" />
-                <span>DEFINITION</span>
+                <span>RUSSIAN DEFINITION</span>
                 <div class="editor-suggestions" data-suggestion-list="definition" data-card-index="${index}" hidden></div>
             </div>
             <div class="editor-field editor-example-field">
@@ -478,6 +492,7 @@ async function generateCardsByAi(text) {
         body: JSON.stringify({
             title: setTitle.value.trim() || "AI vocabulary set",
             text,
+            language: getSetLanguage(),
         }),
     });
 
@@ -496,8 +511,15 @@ async function generateCardsByAi(text) {
 async function generateExampleForCard(index) {
     const card = cards[index];
     if (!card?.term?.trim()) {
-        showToast("Enter the English word first");
+        showToast(`Enter the ${getSourceLanguageName()} word first`);
         focusCard(index, "term");
+        return;
+    }
+
+    const authToken = getAuthToken();
+    if (!authToken) {
+        saveDraft();
+        showToast("Log in to generate example sentences");
         return;
     }
 
@@ -512,14 +534,21 @@ async function generateExampleForCard(index) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${getAuthToken()}`,
+                Authorization: `Bearer ${authToken}`,
             },
             body: JSON.stringify({
                 term: card.term.trim(),
                 definition: String(card.definition || "").trim(),
+                language: getSetLanguage(),
             }),
         });
-        if (!response.ok) throw new Error("Example generation failed");
+        if (!response.ok) {
+            const apiError = await readApiError(response);
+            const error = new Error(apiError.message || "Example generation failed");
+            error.status = response.status;
+            error.retryAfter = response.headers.get("Retry-After");
+            throw error;
+        }
         const data = await response.json();
         card.exampleSentence = String(data.exampleSentence || "").trim();
         saveDraft();
@@ -527,11 +556,28 @@ async function generateExampleForCard(index) {
         showToast(card.exampleSentence ? "Example generated" : "AI did not return an example");
     } catch (error) {
         console.error("Example generation failed:", error);
-        showToast("Could not generate example");
+        if (error.status === 401) {
+            localStorage.removeItem("token");
+            showToast("Your session expired. Log in again");
+        } else if (error.status === 429) {
+            const wait = Number(error.retryAfter);
+            showToast(Number.isFinite(wait) ? `Too many requests. Try again in ${wait} seconds` : "Too many requests. Try again shortly");
+        } else {
+            showToast(error.message || "Could not generate example");
+        }
         if (button) {
             button.disabled = false;
             button.textContent = "Generate sentence";
         }
+    }
+}
+
+async function readApiError(response) {
+    try {
+        const body = await response.json();
+        return { message: String(body.message || "").trim() };
+    } catch {
+        return { message: "" };
     }
 }
 
@@ -645,13 +691,15 @@ function getTermSuggestions(query) {
     const existingTerms = cards
         .map(card => card.term.trim().toLowerCase())
         .filter(Boolean);
-    return Array.from(new Set([...existingTerms, ...termSuggestionWords]))
+    const builtInSuggestions = getSetLanguage() === "en" ? termSuggestionWords : [];
+    return Array.from(new Set([...existingTerms, ...builtInSuggestions]))
         .filter(word => word !== query && word.startsWith(query))
         .slice(0, 5);
 }
 
 async function getDefinitionSuggestions(term) {
-    if (dictionaryCache.has(term)) return dictionaryCache.get(term);
+    const cacheKey = `${getSetLanguage()}:${term}`;
+    if (dictionaryCache.has(cacheKey)) return dictionaryCache.get(cacheKey);
 
     try {
         const response = await fetch(DICTIONARY_LOOKUP_URL, {
@@ -660,7 +708,7 @@ async function getDefinitionSuggestions(term) {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${getAuthToken()}`,
             },
-            body: JSON.stringify({ words: [term], lang: "en-ru" }),
+            body: JSON.stringify({ words: [term], lang: `${getSetLanguage()}-ru` }),
         });
         if (!response.ok) throw new Error("Dictionary lookup failed");
         const data = await response.json();
@@ -670,11 +718,11 @@ async function getDefinitionSuggestions(term) {
             : item?.translation
                 ? [item.translation]
                 : [];
-        dictionaryCache.set(term, values);
+        dictionaryCache.set(cacheKey, values);
         return values;
     } catch (error) {
         console.error("Suggestion lookup failed:", error);
-        dictionaryCache.set(term, []);
+        dictionaryCache.set(cacheKey, []);
         return [];
     }
 }
@@ -701,7 +749,8 @@ async function renderReverseTermSuggestions(input) {
 
 async function getTermSuggestionsFromDefinition(definition) {
     const normalized = normalizeRussianLookup(definition);
-    if (reverseDictionaryCache.has(normalized)) return reverseDictionaryCache.get(normalized);
+    const cacheKey = `${getSetLanguage()}:${normalized}`;
+    if (reverseDictionaryCache.has(cacheKey)) return reverseDictionaryCache.get(cacheKey);
 
     try {
         const response = await fetch(DICTIONARY_LOOKUP_URL, {
@@ -710,7 +759,7 @@ async function getTermSuggestionsFromDefinition(definition) {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${getAuthToken()}`,
             },
-            body: JSON.stringify({ words: [normalized], lang: "ru-en" }),
+            body: JSON.stringify({ words: [normalized], lang: `ru-${getSetLanguage()}` }),
         });
         if (!response.ok) throw new Error("Reverse dictionary lookup failed");
         const data = await response.json();
@@ -720,11 +769,11 @@ async function getTermSuggestionsFromDefinition(definition) {
             : item?.translation
                 ? [item.translation]
                 : [];
-        reverseDictionaryCache.set(normalized, values);
+        reverseDictionaryCache.set(cacheKey, values);
         return values;
     } catch (error) {
         console.error("Reverse suggestion lookup failed:", error);
-        reverseDictionaryCache.set(normalized, []);
+        reverseDictionaryCache.set(cacheKey, []);
         return [];
     }
 }
@@ -1018,6 +1067,7 @@ function createSetPayload() {
         title: setMeta.title?.trim() || "Untitled set",
         description: setMeta.description?.trim() || "",
         public: setMeta.isPublic !== false,
+        language: getSetLanguage(),
         cards: cards
             .map(card => ({
                 clientId: ensureCardClientId(card).clientId,
@@ -1116,6 +1166,7 @@ function saveLocalSet() {
         title: setMeta.title?.trim() || "Untitled set",
         description: setMeta.description?.trim() || "",
         isPublic: setMeta.isPublic !== false,
+        language: getSetLanguage(),
         cards: normalizedCards,
         updatedAt: now,
         createdAt: existingIndex >= 0 ? sets[existingIndex].createdAt : now,
@@ -1160,6 +1211,7 @@ function loadDraft() {
             title: draft?.meta?.title || "",
             description: draft?.meta?.description || "",
             isPublic: draft?.meta?.isPublic !== false,
+            language: draft?.meta?.language === "fr" ? "fr" : "en",
         };
         return {
             cards: Array.isArray(draft?.cards) ? draft.cards : [...defaultCards],
@@ -1214,13 +1266,16 @@ async function loadRequestedSetForEditing() {
             title: remoteSet.title || "",
             description: remoteSet.description || "",
             isPublic: remoteSet.public !== false,
+            language: remoteSet.language === "fr" ? "fr" : "en",
         };
         diagram = null;
         localStorage.setItem(CURRENT_REMOTE_SET_ID_KEY, String(setId));
         localStorage.removeItem(CURRENT_LOCAL_SET_ID_KEY);
         setTitle.value = setMeta.title;
         setDescription.value = setMeta.description;
+        setLanguage.value = getSetLanguage();
         renderVisibility();
+        renderLanguageDependentUi();
         renderDiagram();
         renderCards();
         saveDraft();
@@ -1242,13 +1297,16 @@ function loadLocalSetForEditing(localSetId) {
         title: localSet.title || "",
         description: localSet.description || "",
         isPublic: localSet.isPublic !== false,
+        language: localSet.language === "fr" ? "fr" : "en",
     };
     diagram = null;
     localStorage.setItem(CURRENT_LOCAL_SET_ID_KEY, localSetId);
     localStorage.removeItem(CURRENT_REMOTE_SET_ID_KEY);
     setTitle.value = setMeta.title;
     setDescription.value = setMeta.description;
+    setLanguage.value = getSetLanguage();
     renderVisibility();
+    renderLanguageDependentUi();
     renderDiagram();
     renderCards();
     saveDraft();
@@ -1261,7 +1319,7 @@ function createEmptyDraft() {
             { term: "", definition: "", exampleSentence: "", image: "" },
         ],
         diagram: null,
-        meta: { title: "", description: "", isPublic: true },
+        meta: { title: "", description: "", isPublic: true, language: "en" },
     };
 }
 
@@ -1269,7 +1327,7 @@ function createStarterDraft() {
     return {
         cards: [...defaultCards],
         diagram: null,
-        meta: { title: "", description: "", isPublic: true },
+        meta: { title: "", description: "", isPublic: true, language: "en" },
     };
 }
 
@@ -1279,6 +1337,20 @@ function renderVisibility() {
         <span aria-hidden="true">${setMeta.isPublic ? "◎" : "○"}</span>
         ${setMeta.isPublic ? "Public" : "Private"}
     `;
+}
+
+function getSetLanguage() {
+    return setMeta.language === "fr" ? "fr" : "en";
+}
+
+function getSourceLanguageName() {
+    return getSetLanguage() === "fr" ? "French" : "English";
+}
+
+function renderLanguageDependentUi() {
+    const languageName = getSourceLanguageName();
+    setLanguage.value = getSetLanguage();
+    addAiLanguageHelp.textContent = `Paste any ${languageName} text. DeepSeek will find useful words and add new flashcards to this set.`;
 }
 
 function showToast(message) {

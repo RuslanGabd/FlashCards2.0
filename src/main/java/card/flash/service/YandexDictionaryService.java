@@ -87,10 +87,12 @@ public class YandexDictionaryService {
     }
 
     private String normalizeDirection(String lang) {
-        if ("ru-en".equalsIgnoreCase(lang)) {
-            return "ru-en";
-        }
-        return "en-ru";
+        return switch (lang == null ? "" : lang.toLowerCase()) {
+            case "ru-en" -> "ru-en";
+            case "fr-ru" -> "fr-ru";
+            case "ru-fr" -> "ru-fr";
+            default -> "en-ru";
+        };
     }
 
     private DictionaryWordDto parseResponse(String word, String body) throws IOException {

@@ -26,7 +26,8 @@ public class ExternalApiRateLimitFilter extends OncePerRequestFilter {
 
     private static final long WINDOW_MILLIS = 60_000;
     private static final Map<String, Integer> LIMITS = Map.of(
-            "/api/ai", 10,
+            "/api/ai/create-set", 10,
+            "/api/ai/example", 60,
             "/api/documents", 10,
             "/api/dictionary", 30,
             "/api/pronunciation", 60

@@ -31,6 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const cancelAiCreate = document.getElementById("cancel-ai-create");
     const generateAiSet = document.getElementById("generate-ai-set");
     const aiSetTitle = document.getElementById("ai-set-title");
+    const aiSetLanguage = document.getElementById("ai-set-language");
     const aiSourceText = document.getElementById("ai-source-text");
     const toast = document.getElementById("toast");
 
@@ -53,10 +54,11 @@ document.addEventListener("DOMContentLoaded", () => {
         generateAiSet.disabled = true;
         generateAiSet.textContent = "Generating...";
 
-        const aiSet = await generateCardsByAi(aiSetTitle.value.trim(), text);
-        const cards = aiSet.cards.length ? aiSet.cards : generateCardsFromText(text);
+        const language = aiSetLanguage.value === "fr" ? "fr" : "en";
+        const aiSet = await generateCardsByAi(aiSetTitle.value.trim(), text, language);
+        const cards = aiSet.cards.length ? aiSet.cards : generateCardsFromText(text, language);
         if (!cards.length) {
-            showToast("No English words found", toast);
+            showToast(`No ${language === "fr" ? "French" : "English"} words found`, toast);
             generateAiSet.disabled = false;
             generateAiSet.textContent = "Generate cards";
             return;
@@ -69,6 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 title: aiSet.title || aiSetTitle.value.trim() || "AI vocabulary set",
                 description: aiSet.description || `Generated from pasted text: ${cards.length} cards`,
                 isPublic: true,
+                language,
             },
         });
 
@@ -103,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 item.innerHTML = `
                     <div class="set-thumb">${getInitials(set.title)}</div>
                     <div class="activity-copy">
-                        <p class="set-meta">Public set · ${escapeHtml(set.ownerUsername || "Words Up")}</p>
+                        <p class="set-meta">Public set · ${set.language === "fr" ? "French" : "English"} · ${escapeHtml(set.ownerUsername || "Words Up")}</p>
                         <h3>${escapeHtml(set.title)}</h3>
                         <p class="set-description">${escapeHtml(set.description || "No description")}</p>
                     </div>
@@ -141,7 +144,7 @@ document.addEventListener("click", event => {
     window.location.href = setItem.dataset.setUrl;
 });
 
-async function generateCardsByAi(title, text) {
+async function generateCardsByAi(title, text, language) {
     try {
         const response = await fetch(`${API_BASE_URL}/api/ai/create-set`, {
             method: "POST",
@@ -149,7 +152,7 @@ async function generateCardsByAi(title, text) {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
             },
-            body: JSON.stringify({ title, text }),
+            body: JSON.stringify({ title, text, language }),
         });
 
         if (!response.ok) throw new Error("AI generation failed");
@@ -172,14 +175,20 @@ async function generateCardsByAi(title, text) {
     }
 }
 
-function generateCardsFromText(text) {
-    const words = text.toLowerCase().match(/[a-z]+(?:'[a-z]+)?/g) || [];
-    const stopWords = new Set([
+function generateCardsFromText(text, language = "en") {
+    const words = text.toLowerCase().match(/\p{L}+(?:['’]\p{L}+)?/gu) || [];
+    const englishStopWords = [
         "the", "and", "for", "that", "this", "with", "you", "your", "are", "was", "were",
         "have", "has", "had", "from", "they", "their", "there", "what", "when", "where",
         "will", "would", "could", "should", "into", "onto", "than", "then", "them", "his",
         "her", "our", "out", "about", "but", "not", "all", "can", "one", "two", "too",
-    ]);
+    ];
+    const frenchStopWords = [
+        "le", "la", "les", "un", "une", "des", "du", "de", "et", "est", "sont", "dans",
+        "pour", "avec", "sans", "sur", "sous", "que", "qui", "quoi", "dont", "où", "mais",
+        "pas", "plus", "son", "sa", "ses", "leur", "leurs", "nous", "vous", "ils", "elles",
+    ];
+    const stopWords = new Set(language === "fr" ? frenchStopWords : englishStopWords);
     const counts = new Map();
 
     words.forEach(word => {
@@ -193,7 +202,7 @@ function generateCardsFromText(text) {
         .slice(0, 30)
         .map(([term]) => ({
             term,
-            definition: localTranslations[term] || "add translation",
+            definition: language === "en" ? localTranslations[term] || "add translation" : "add translation",
             image: "",
         }));
 }

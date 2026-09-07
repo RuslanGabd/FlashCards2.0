@@ -19,19 +19,19 @@
 <main class="study-mode-shell">
     <section class="study-mode-heading">
         <div>
-            <p class="eyebrow">English typing</p>
+            <p class="eyebrow" id="typing-language-eyebrow">English typing</p>
             <h1 id="typing-title">Type the English word</h1>
         </div>
         <p id="typing-progress">0 / 0</p>
     </section>
 
     <section class="practice-card typing-card" id="typing-card">
-        <p class="practice-question-label">Translate into English</p>
+        <p class="practice-question-label" id="typing-question-label">Translate into English</p>
         <h2 id="typing-question">Loading...</h2>
         <p class="typing-example-sentence" id="typing-example-sentence" hidden></p>
 
         <form class="typing-answer-form" id="typing-answer-form" autocomplete="off">
-            <label class="typing-answer-label" for="typing-answer-input">English word</label>
+            <label class="typing-answer-label" id="typing-answer-label" for="typing-answer-input">English word</label>
             <input id="typing-answer-input" type="text" maxlength="2000"
                    placeholder="Type your answer" autocomplete="off" spellcheck="false" />
             <p class="typing-feedback" id="typing-feedback" role="status" aria-live="polite"></p>

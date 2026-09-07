@@ -554,6 +554,7 @@ function sendWordsToCards(wordItems, title) {
             title,
             description: `Generated from text: ${cards.length} words`,
             isPublic: true,
+            language: "en",
         },
     }));
 

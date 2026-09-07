@@ -9,5 +9,6 @@ public class FlashcardSetDto {
     private String description;
     private boolean isPublic;
     private String ownerUsername;
+    private String language;
 
 }

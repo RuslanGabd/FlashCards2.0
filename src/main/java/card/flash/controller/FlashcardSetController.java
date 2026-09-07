@@ -80,6 +80,21 @@ public class FlashcardSetController {
         return ResponseEntity.ok(FlashcardSetMapper.toDto(set));
     }
 
+    @GetMapping("/{id}/study")
+    public ResponseEntity<FlashcardSetDto> getSetForStudy(
+            @PathVariable @Positive Long id,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        FlashcardSet set = flashcardSetService.getById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Flashcard set not found"));
+        boolean owner = set.getOwner() != null && userDetails != null
+                && userDetails.getUsername().equals(set.getOwner().getUsername());
+        if (!set.isPublic() && !owner) {
+            throw new AccessDeniedException("This set is private");
+        }
+        return ResponseEntity.ok(FlashcardSetMapper.toDto(set));
+    }
+
     /** GET /api/sets/user/{username} → All sets owned by this username */
     @GetMapping("/user/{username}")
     public ResponseEntity<?> getSetsByUser(
@@ -146,6 +161,9 @@ public class FlashcardSetController {
         set.setTitle(request.title());
         set.setDescription(request.description());
         set.setPublic(request.publicSet());
+        if (request.language() != null || set.getLanguage() == null || set.getLanguage().isBlank()) {
+            set.setLanguage(normalizeLanguage(request.language()));
+        }
 
         if (request.cards() == null) {
             set.getCards().clear();
@@ -179,5 +197,9 @@ public class FlashcardSetController {
             }
         }
         set.getCards().removeIf(card -> !retainedCards.contains(card));
+    }
+
+    private String normalizeLanguage(String language) {
+        return "fr".equalsIgnoreCase(language) ? "fr" : "en";
     }
 }

@@ -109,7 +109,14 @@
             <h2>Create set by AI</h2>
             <button type="button" id="close-ai-create" aria-label="Close">×</button>
         </div>
-        <p>Paste any English text. For now Words Up will generate cards locally; later this flow will use DeepSeek when you add the API key.</p>
+        <p id="ai-create-language-help">Paste text in the language you want to study. DeepSeek will create Russian translations.</p>
+        <label class="ai-create-title-field">
+            <span>Cards language</span>
+            <select id="ai-set-language">
+                <option value="en">English</option>
+                <option value="fr">French</option>
+            </select>
+        </label>
         <label class="ai-create-title-field">
             <span>Title</span>
             <input id="ai-set-title" type="text" placeholder="AI vocabulary set" />

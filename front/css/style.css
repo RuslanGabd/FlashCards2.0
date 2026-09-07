@@ -1199,6 +1199,7 @@ body {
 }
 
 .ai-create-title-field input,
+.ai-create-title-field select,
 .ai-create-text-field textarea {
     width: 100%;
     border: 0;
@@ -1266,6 +1267,10 @@ body {
 .secondary-study-link {
     color: var(--latest-blue);
     border-color: #e6e8ef;
+}
+
+.ai-create-title-field select {
+    min-height: 50px;
 }
 
 .delete-set-button {
@@ -1774,7 +1779,6 @@ body {
     align-items: center;
     gap: 0.55rem;
     background: var(--surface);
-    margin-bottom: 2.4rem;
     padding: 0.75rem 1.15rem;
     font-size: 1rem;
 }
@@ -2258,6 +2262,39 @@ body {
     color: #eef2ff;
     font-weight: 900;
     font-size: 0.95rem;
+}
+
+.set-options-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2.4rem;
+}
+
+.set-language-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    color: #c8d1f5;
+    font-weight: 800;
+}
+
+.set-language-field select {
+    min-height: 44px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    background: #27314d;
+    color: white;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 800;
+    padding: 0 2.4rem 0 1rem;
+}
+
+.set-language-field select:focus-visible {
+    outline: 3px solid rgba(66, 87, 255, 0.55);
+    outline-offset: 2px;
 }
 
 .editor-example-field {

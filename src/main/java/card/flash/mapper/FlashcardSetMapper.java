@@ -11,6 +11,7 @@ public class FlashcardSetMapper {
         dto.setTitle(set.getTitle());
         dto.setDescription(set.getDescription());
         dto.setPublic(set.isPublic());
+        dto.setLanguage(set.getLanguage());
 
         if (set.getOwner() != null) {
             dto.setOwnerUsername(set.getOwner().getUsername());
@@ -26,6 +27,7 @@ public class FlashcardSetMapper {
         set.setTitle(dto.getTitle());
         set.setDescription(dto.getDescription());
         set.setPublic(dto.isPublic());
+        set.setLanguage("fr".equalsIgnoreCase(dto.getLanguage()) ? "fr" : "en");
         // Note: owner needs to be set manually
         return set;
     }

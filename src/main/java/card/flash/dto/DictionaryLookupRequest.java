@@ -9,6 +9,6 @@ import java.util.List;
 
 public record DictionaryLookupRequest(
         @NotEmpty @Size(max = 50) List<@NotBlank @Size(max = 100) String> words,
-        @Pattern(regexp = "(?i)en-ru|ru-en") String lang
+        @Pattern(regexp = "(?i)en-ru|ru-en|fr-ru|ru-fr") String lang
 ) {
 }

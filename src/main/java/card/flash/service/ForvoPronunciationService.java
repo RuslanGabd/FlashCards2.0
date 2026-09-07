@@ -1,8 +1,10 @@
 package card.flash.service;
 
 import card.flash.dto.PronunciationResponse;
+import card.flash.entity.ForvoPronunciationCache;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -14,6 +16,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Locale;
+import java.util.Optional;
 
 @Service
 public class ForvoPronunciationService {
@@ -25,17 +28,26 @@ public class ForvoPronunciationService {
             .connectTimeout(Duration.ofSeconds(10))
             .build();
     private final ObjectMapper objectMapper;
+    private final ForvoPronunciationCacheService cacheService;
     private final String apiKey;
     private final String apiBaseUrl;
+    private final Duration positiveCacheTtl;
+    private final Duration negativeCacheTtl;
 
     public ForvoPronunciationService(
             ObjectMapper objectMapper,
+            ForvoPronunciationCacheService cacheService,
             @Value("${forvo.api-key:}") String apiKey,
-            @Value("${forvo.api-base-url:https://apifree.forvo.com}") String apiBaseUrl
+            @Value("${forvo.api-base-url:https://apifree.forvo.com}") String apiBaseUrl,
+            @Value("${forvo.cache.positive-ttl:PT720H}") Duration positiveCacheTtl,
+            @Value("${forvo.cache.negative-ttl:PT24H}") Duration negativeCacheTtl
     ) {
         this.objectMapper = objectMapper;
+        this.cacheService = cacheService;
         this.apiKey = apiKey;
         this.apiBaseUrl = apiBaseUrl;
+        this.positiveCacheTtl = positiveCacheTtl;
+        this.negativeCacheTtl = negativeCacheTtl;
     }
 
     public PronunciationResponse getPronunciation(String word, String language, String accent) {
@@ -43,7 +55,7 @@ public class ForvoPronunciationService {
         String normalizedLanguage = normalizeLanguage(language);
         String country = normalizeCountry(normalizedLanguage, accent);
 
-        if (normalizedWord.isBlank() || apiKey == null || apiKey.isBlank()) {
+        if (normalizedWord.isBlank()) {
             return emptyResult(normalizedWord, normalizedLanguage);
         }
 
@@ -76,6 +88,23 @@ public class ForvoPronunciationService {
 
     private PronunciationResponse findPronunciation(String word, String language, String country)
             throws IOException, InterruptedException {
+        String cacheWord = normalizeCacheWord(word);
+        Optional<ForvoPronunciationCache> cached = cacheService.find(cacheWord, language, country);
+        if (cached.isPresent()) {
+            ForvoPronunciationCache entry = cached.get();
+            return new PronunciationResponse(
+                    word,
+                    language,
+                    entry.getAudioUrl(),
+                    entry.getSource() + "-cache"
+            );
+        }
+
+        if (apiKey == null || apiKey.isBlank()) {
+            return emptyResult(word, language);
+        }
+
+        PronunciationResponse result;
         if (!country.isBlank()) {
             PronunciationResponse countryResult = requestPronunciation(
                     buildPronunciationUri(word, language, "word-pronunciations", country),
@@ -84,16 +113,29 @@ public class ForvoPronunciationService {
                     "forvo-" + country.toLowerCase(Locale.ROOT)
             );
             if (countryResult.audioUrl() != null) {
-                return countryResult;
+                result = countryResult;
+                storeCache(cacheWord, language, country, result);
+                return result;
             }
         }
 
-        return requestPronunciation(
+        result = requestPronunciation(
                 buildPronunciationUri(word, language, "standard-pronunciation", ""),
                 word,
                 language,
                 "forvo"
         );
+        storeCache(cacheWord, language, country, result);
+        return result;
+    }
+
+    private void storeCache(String cacheWord, String language, String country, PronunciationResponse result) {
+        Duration ttl = result.audioUrl() == null ? negativeCacheTtl : positiveCacheTtl;
+        try {
+            cacheService.store(cacheWord, language, country, result.audioUrl(), result.source(), ttl);
+        } catch (DataIntegrityViolationException ignored) {
+            // A concurrent request may have inserted the same cache key first.
+        }
     }
 
     private String removeLeadingEnglishPreposition(String word, String language) {
@@ -114,7 +156,7 @@ public class ForvoPronunciationService {
                 .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() >= 400) {
-            return emptyResult(word, language);
+            throw new IOException("Forvo API returned HTTP " + response.statusCode());
         }
         return parseResponse(word, language, response.body(), source);
     }
@@ -163,10 +205,17 @@ public class ForvoPronunciationService {
         return word == null ? "" : word.trim();
     }
 
+    private String normalizeCacheWord(String word) {
+        return normalizeWord(word).toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
+    }
+
     private String normalizeLanguage(String language) {
         String value = language == null ? "" : language.trim().toLowerCase(Locale.ROOT);
         if (value.startsWith("ru")) {
             return "ru";
+        }
+        if (value.startsWith("fr")) {
+            return "fr";
         }
         return "en";
     }

@@ -14,6 +14,7 @@ let countdownRemainingMs = 0;
 let pronunciationPlaybackToken = 0;
 let activePronunciationAudio = null;
 let activePronunciationCancel = null;
+let studySetLanguage = "en";
 const favoriteTerms = new Set(JSON.parse(localStorage.getItem("words-up-favorite-terms") || "[]"));
 let flashSettings = JSON.parse(localStorage.getItem("words-up-flash-settings") || "{}");
 const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8085" : "";
@@ -89,6 +90,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         applySavedSettings();
         initializeAnnotationTools();
         const set = await loadStudySet();
+        studySetLanguage = set.language === "fr" ? "fr" : "en";
+        configureStudyLanguage();
         allCards = set.cards;
         cards = getStudyCards();
         document.title = `${set.title} - Flashcards`;
@@ -346,7 +349,7 @@ async function toggleCurrentCardTranscription() {
         return;
     }
 
-    const cacheKey = term.toLocaleLowerCase("en-US");
+    const cacheKey = `${studySetLanguage}:${term.toLocaleLowerCase(studySetLanguage === "fr" ? "fr-FR" : "en-US")}`;
     if (transcriptionCache.has(cacheKey)) {
         renderTranscription(transcriptionCache.get(cacheKey));
         return;
@@ -358,7 +361,9 @@ async function toggleCurrentCardTranscription() {
 
     try {
         let transcription = await requestTranscription(term, authToken);
-        const baseWord = term.replace(LEADING_ENGLISH_PREPOSITION, "").trim();
+        const baseWord = studySetLanguage === "en"
+                ? term.replace(LEADING_ENGLISH_PREPOSITION, "").trim()
+                : term;
         if (!transcription && baseWord !== term) {
             transcription = await requestTranscription(baseWord, authToken);
         }
@@ -384,7 +389,7 @@ async function requestTranscription(term, authToken) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`,
         },
-        body: JSON.stringify({ words: [term], lang: "en-ru" }),
+        body: JSON.stringify({ words: [term], lang: `${studySetLanguage}-ru` }),
     });
     if (!response.ok) throw new Error("Dictionary lookup failed");
     const data = await response.json();
@@ -479,6 +484,19 @@ function canUseTextToSpeech(language) {
     if (!ttsToggle.checked) return false;
     if (language === "ru") return russianTtsToggle.checked;
     return englishTtsToggle.checked;
+}
+
+function configureStudyLanguage() {
+    const isFrench = studySetLanguage === "fr";
+    const sourceName = isFrench ? "French" : "English";
+    const accentLabel = accentSelect.closest("label");
+    if (accentLabel) accentLabel.hidden = isFrench;
+    frontSideSelect.querySelector('option[value="term"]').textContent = sourceName;
+
+    const sourceTtsHeading = englishTtsToggle.closest(".option-row")?.querySelector("h2");
+    const sourceSpeedHeading = englishSpeedSelect.closest(".option-row")?.querySelector("h2");
+    if (sourceTtsHeading) sourceTtsHeading.textContent = `${sourceName} text to speech`;
+    if (sourceSpeedHeading) sourceSpeedHeading.textContent = `${sourceName} text to speech speed`;
 }
 
 function autoSpeakCurrentCard() {
@@ -670,12 +688,12 @@ async function speakCurrentCardSide(card, manualPlayback = false) {
     }
 
     const isRussianSide = side === "definition";
-    if (!manualPlayback && !canUseTextToSpeech(isRussianSide ? "ru" : "en")) {
+    if (!manualPlayback && !canUseTextToSpeech(isRussianSide ? "ru" : studySetLanguage)) {
         return;
     }
 
-    const lang = isRussianSide ? "ru" : "en";
-    const accent = isRussianSide ? "" : accentSelect.value;
+    const lang = isRussianSide ? "ru" : studySetLanguage;
+    const accent = !isRussianSide && studySetLanguage === "en" ? accentSelect.value : "";
     const playedForvoAudio = await playForvoPronunciation(text, lang, accent, playbackToken);
     if (playedForvoAudio) {
         return;
@@ -690,7 +708,11 @@ async function speakCurrentCardSide(card, manualPlayback = false) {
         return;
     }
 
-    const speechLang = isRussianSide ? "ru-RU" : accentSelect.value === "uk" ? "en-GB" : "en-US";
+    const speechLang = isRussianSide
+            ? "ru-RU"
+            : studySetLanguage === "fr"
+                ? "fr-FR"
+                : accentSelect.value === "uk" ? "en-GB" : "en-US";
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = speechLang;
     utterance.rate = Number(isRussianSide ? russianSpeedSelect.value : englishSpeedSelect.value);

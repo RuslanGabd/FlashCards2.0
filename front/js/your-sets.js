@@ -87,7 +87,7 @@ function renderLocalSets() {
         item.innerHTML = `
             <div class="set-thumb">${getInitials(set.title)}</div>
             <div class="activity-copy">
-                <p class="set-meta">Local set · ${set.cards?.length || 0} cards</p>
+                <p class="set-meta">Local set · ${getLanguageName(set.language)} · ${set.cards?.length || 0} cards</p>
                 <h3>${escapeHtml(set.title || "Untitled set")}</h3>
                 <p class="set-description">${escapeHtml(set.description || "Saved in this browser")}</p>
             </div>
@@ -155,7 +155,7 @@ function renderPublicSets(sets) {
         item.innerHTML = `
             <div class="set-thumb">${getInitials(set.title)}</div>
             <div class="activity-copy">
-                <p class="set-meta">Public set · ${escapeHtml(set.ownerUsername || "Words Up")}</p>
+                <p class="set-meta">Public set · ${getLanguageName(set.language)} · ${escapeHtml(set.ownerUsername || "Words Up")}</p>
                 <h3>${escapeHtml(set.title)}</h3>
                 <p class="set-description">${escapeHtml(set.description || "No description")}</p>
             </div>
@@ -265,6 +265,10 @@ function getInitials(value) {
         .slice(0, 2)
         .map(word => word[0].toUpperCase())
         .join("");
+}
+
+function getLanguageName(language) {
+    return language === "fr" ? "French" : "English";
 }
 
 function escapeHtml(value) {

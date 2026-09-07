@@ -32,6 +32,10 @@ public class FlashcardSet {
     @Column(name = "is_public")
     private boolean isPublic;
 
+    @Column(name = "language_code", nullable = false, length = 2)
+    @Builder.Default
+    private String language = "en";
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;

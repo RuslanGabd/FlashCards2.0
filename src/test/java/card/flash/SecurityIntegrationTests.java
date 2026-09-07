@@ -81,9 +81,16 @@ class SecurityIntegrationTests {
         mockMvc.perform(get("/api/flashcards/set/{id}", publicSet.getId()))
                 .andExpect(status().isOk());
 
+        mockMvc.perform(get("/api/sets/{id}/study", publicSet.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.language").value("en"));
+
         mockMvc.perform(get("/api/flashcards/set/{id}", privateSet.getId()))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403));
+
+        mockMvc.perform(get("/api/sets/{id}/study", privateSet.getId()))
+                .andExpect(status().isForbidden());
 
         mockMvc.perform(get("/api/flashcards/set/{id}", privateSet.getId())
                         .header("Authorization", bearer(owner)))

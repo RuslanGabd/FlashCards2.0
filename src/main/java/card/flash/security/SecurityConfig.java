@@ -53,6 +53,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/sets/public").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/sets/*/study").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/flashcards/set/**").permitAll()
                         .requestMatchers("/api/sets/**").authenticated()
                         .requestMatchers("/api/flashcards/**").authenticated()

@@ -25,10 +25,19 @@
             </div>
         </div>
 
-        <button class="visibility-pill" id="visibility-button" type="button" aria-pressed="true">
-            <span aria-hidden="true">◎</span>
-            Public
-        </button>
+        <div class="set-options-row">
+            <button class="visibility-pill" id="visibility-button" type="button" aria-pressed="true">
+                <span aria-hidden="true">◎</span>
+                Public
+            </button>
+            <label class="set-language-field">
+                <span>Cards language</span>
+                <select id="set-language">
+                    <option value="en">English</option>
+                    <option value="fr">French</option>
+                </select>
+            </label>
+        </div>
 
         <label class="set-meta-field">
             <span class="visually-hidden">Title</span>
@@ -119,7 +128,7 @@
             <h2>Add cards by AI</h2>
             <button type="button" id="close-add-ai" aria-label="Close">×</button>
         </div>
-        <p>Paste any English text. DeepSeek will find useful words and add new flashcards to this set.</p>
+        <p id="add-ai-language-help">Paste any English text. DeepSeek will find useful words and add new flashcards to this set.</p>
         <textarea id="add-ai-text" rows="9" placeholder="Paste text here..."></textarea>
         <div class="dialog-actions">
             <button class="secondary-button" type="button" id="cancel-add-ai">Cancel</button>

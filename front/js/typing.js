@@ -4,6 +4,7 @@ let typingCurrentIndex = 0;
 let typingCorrectCount = 0;
 let typingAnswerAccepted = false;
 let typingIncorrectCards = [];
+let typingLanguage = "en";
 
 const typingTitle = document.getElementById("typing-title");
 const typingProgress = document.getElementById("typing-progress");
@@ -16,16 +17,21 @@ const typingCheckButton = document.getElementById("typing-check-button");
 const typingRevealButton = document.getElementById("typing-reveal-button");
 const typingNextButton = document.getElementById("typing-next-button");
 const typingRetryButton = document.getElementById("typing-retry-button");
+const typingLanguageEyebrow = document.getElementById("typing-language-eyebrow");
+const typingQuestionLabel = document.getElementById("typing-question-label");
+const typingAnswerLabel = document.getElementById("typing-answer-label");
 
 document.addEventListener("DOMContentLoaded", async () => {
     preserveTypingQueryParameters();
 
     try {
         const set = await loadStudySet();
+        typingLanguage = set.language === "fr" ? "fr" : "en";
+        configureTypingLanguage();
         typingAllCards = [...set.cards];
         typingCards = shuffleItems(typingAllCards);
         typingTitle.textContent = set.title || "Type the English word";
-        document.title = `${set.title || "Typing"} - English typing`;
+        document.title = `${set.title || "Typing"} - ${getTypingLanguageName()} typing`;
         renderTypingCard();
     } catch (error) {
         console.error("Typing mode load failed:", error);
@@ -45,7 +51,7 @@ typingForm.addEventListener("submit", async event => {
 
     const answer = normalizeTypingAnswer(typingInput.value);
     if (!answer) {
-        showTypingFeedback("Type an English word first", "incorrect");
+        showTypingFeedback(`Type a ${getTypingLanguageName()} word first`, "incorrect");
         typingInput.focus();
         return;
     }
@@ -169,7 +175,7 @@ function normalizeTypingAnswer(value) {
     return String(value || "")
             .normalize("NFKC")
             .trim()
-            .toLocaleLowerCase("en-US")
+            .toLocaleLowerCase(typingLanguage === "fr" ? "fr-FR" : "en-US")
             .replace(/[’‘]/g, "'")
             .replace(/\s+/g, " ");
 }
@@ -180,8 +186,10 @@ async function pronounceTypedEnglish(word) {
     try {
         const url = new URL("/api/pronunciation", window.location.origin);
         url.searchParams.set("word", word);
-        url.searchParams.set("language", "en");
-        url.searchParams.set("accent", localStorage.getItem("words-up-pronunciation-accent") || "us");
+        url.searchParams.set("language", typingLanguage);
+        if (typingLanguage === "en") {
+            url.searchParams.set("accent", localStorage.getItem("words-up-pronunciation-accent") || "us");
+        }
 
         const response = await fetch(url, {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -238,9 +246,23 @@ function speakTypedWordInBrowser(word) {
     if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) return;
     speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(word);
-    utterance.lang = localStorage.getItem("words-up-pronunciation-accent") === "uk" ? "en-GB" : "en-US";
+    utterance.lang = typingLanguage === "fr"
+            ? "fr-FR"
+            : localStorage.getItem("words-up-pronunciation-accent") === "uk" ? "en-GB" : "en-US";
     utterance.rate = 0.9;
     window.setTimeout(() => speechSynthesis.speak(utterance), 90);
+}
+
+function getTypingLanguageName() {
+    return typingLanguage === "fr" ? "French" : "English";
+}
+
+function configureTypingLanguage() {
+    const languageName = getTypingLanguageName();
+    typingLanguageEyebrow.textContent = `${languageName} typing`;
+    typingTitle.textContent = `Type the ${languageName} word`;
+    typingQuestionLabel.textContent = `Translate into ${languageName}`;
+    typingAnswerLabel.textContent = `${languageName} word`;
 }
 
 function preserveTypingQueryParameters() {

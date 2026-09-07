@@ -24,7 +24,7 @@ public class PronunciationController {
     @GetMapping
     public PronunciationResponse getPronunciation(
             @RequestParam @Size(min = 1, max = 100) String word,
-            @RequestParam(defaultValue = "en") @Pattern(regexp = "(?i)en|ru") String language,
+            @RequestParam(defaultValue = "en") @Pattern(regexp = "(?i)en|fr|ru") String language,
             @RequestParam(defaultValue = "") @Pattern(regexp = "(?i)|uk|gb|british|us|usa|american") String accent
     ) {
         return forvoPronunciationService.getPronunciation(word, language, accent);

@@ -13,22 +13,25 @@ async function loadStudySet() {
 
     if (setId) {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${STUDY_API_BASE_URL}/api/flashcards/set/${encodeURIComponent(setId)}`, {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        if (!response.ok) {
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const [setResponse, cardsResponse] = await Promise.all([
+            fetch(`${STUDY_API_BASE_URL}/api/sets/${encodeURIComponent(setId)}/study`, { headers }),
+            fetch(`${STUDY_API_BASE_URL}/api/flashcards/set/${encodeURIComponent(setId)}`, { headers }),
+        ]);
+        if (!setResponse.ok || !cardsResponse.ok) {
             let message = "Failed to fetch flashcards";
             try {
-                const error = await response.json();
+                const error = await (!setResponse.ok ? setResponse : cardsResponse).json();
                 message = error.message || message;
             } catch {
                 // Keep the fallback when the server did not return JSON.
             }
             throw new Error(message);
         }
-        const cards = await response.json();
+        const [set, cards] = await Promise.all([setResponse.json(), cardsResponse.json()]);
         return {
-            title: `Set ${setId}`,
+            title: set.title || `Set ${setId}`,
+            language: normalizeStudyLanguage(set.language),
             cards: normalizeCards(cards),
         };
     }
@@ -40,16 +43,17 @@ function loadLocalStudySet(localSetId) {
     try {
         const sets = JSON.parse(localStorage.getItem(LOCAL_SETS_KEY));
         const set = Array.isArray(sets) ? sets.find(item => item.id === localSetId) : null;
-        if (!set) return { title: "Local set", cards: [] };
+        if (!set) return { title: "Local set", language: "en", cards: [] };
         if (ensureStudyCardClientIds(set.cards || [])) {
             localStorage.setItem(LOCAL_SETS_KEY, JSON.stringify(sets));
         }
         return {
             title: set.title || "Local set",
+            language: normalizeStudyLanguage(set.language),
             cards: normalizeCards(set.cards || []),
         };
     } catch {
-        return { title: "Local set", cards: [] };
+        return { title: "Local set", language: "en", cards: [] };
     }
 }
 
@@ -61,10 +65,11 @@ function loadDraftStudySet() {
         }
         return {
             title: draft?.meta?.title || "Local draft",
+            language: normalizeStudyLanguage(draft?.meta?.language),
             cards: normalizeCards(draft?.cards || []),
         };
     } catch {
-        return { title: "Local draft", cards: [] };
+        return { title: "Local draft", language: "en", cards: [] };
     }
 }
 
@@ -83,6 +88,10 @@ function normalizeCards(cards) {
             };
         })
         .filter(card => card.term && card.definition);
+}
+
+function normalizeStudyLanguage(language) {
+    return language === "fr" ? "fr" : "en";
 }
 
 function ensureStudyCardClientIds(cards) {
