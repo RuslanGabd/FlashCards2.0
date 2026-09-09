@@ -14,29 +14,46 @@ async function loadStudySet() {
     if (setId) {
         const token = localStorage.getItem("token");
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const [setResponse, cardsResponse] = await Promise.all([
-            fetch(`${STUDY_API_BASE_URL}/api/sets/${encodeURIComponent(setId)}/study`, { headers }),
-            fetch(`${STUDY_API_BASE_URL}/api/flashcards/set/${encodeURIComponent(setId)}`, { headers }),
-        ]);
-        if (!setResponse.ok || !cardsResponse.ok) {
+        const setRequest = fetchOptionalStudySetMetadata(setId, headers);
+        const cardsResponse = await fetch(
+            `${STUDY_API_BASE_URL}/api/flashcards/set/${encodeURIComponent(setId)}`,
+            { headers },
+        );
+        if (!cardsResponse.ok) {
             let message = "Failed to fetch flashcards";
             try {
-                const error = await (!setResponse.ok ? setResponse : cardsResponse).json();
+                const error = await cardsResponse.json();
                 message = error.message || message;
             } catch {
                 // Keep the fallback when the server did not return JSON.
             }
             throw new Error(message);
         }
-        const [set, cards] = await Promise.all([setResponse.json(), cardsResponse.json()]);
+        const [set, cards] = await Promise.all([setRequest, cardsResponse.json()]);
         return {
-            title: set.title || `Set ${setId}`,
-            language: normalizeStudyLanguage(set.language),
+            title: set?.title || `Set ${setId}`,
+            language: normalizeStudyLanguage(set?.language),
             cards: normalizeCards(cards),
         };
     }
 
     return loadDraftStudySet();
+}
+
+async function fetchOptionalStudySetMetadata(setId, headers) {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 2500);
+    try {
+        const response = await fetch(
+            `${STUDY_API_BASE_URL}/api/sets/${encodeURIComponent(setId)}/study`,
+            { headers, signal: controller.signal },
+        );
+        return response.ok ? await response.json() : null;
+    } catch {
+        return null;
+    } finally {
+        window.clearTimeout(timeoutId);
+    }
 }
 
 function loadLocalStudySet(localSetId) {
