@@ -5,22 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login – Words Up</title>
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/auth-design.css" />
 </head>
-<body>
-<section class="auth-section">
-    <div class="auth-box">
-        <h2>Login to Words Up</h2>
-        <form id="login-form">
-            <label>Username or email</label>
-            <input id="username" type="text" required />
-            <label>Password</label>
-            <input id="password" type="password" required />
-            <button type="submit">Log In</button>
-        </form>
-        <p id="auth-message" class="small-text"></p>
-        <p class="small-text">Don't have an account? <a href="signup.html">Sign up</a></p>
-    </div>
-</section>
+<body class="auth-page">
+<header class="auth-header">
+    <a class="auth-brand" href="index.html" aria-label="Words Up home"><span class="auth-brand-mark" aria-hidden="true"></span>Words Up<span class="auth-brand-dot">.</span></a>
+    <a class="auth-home-link" href="index.html"><svg class="auth-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6" /></svg> Back to home</a>
+</header>
+<main class="auth-layout">
+    <section class="auth-story" aria-labelledby="story-heading">
+        <span class="auth-eyebrow"><span aria-hidden="true">✳</span> A little practice. A lot of progress.</span>
+        <h2 id="story-heading">Good to have<br />you <em>back.</em></h2>
+        <p>Your next discovery is just a card away.<br />Pick up where you left off.</p>
+        <div class="auth-card-stack" aria-hidden="true">
+            <div class="auth-sample-card auth-sample-card-back"></div>
+            <div class="auth-sample-card auth-sample-card-middle"></div>
+            <div class="auth-sample-card auth-sample-card-front">
+                <div class="auth-sample-top"><span>WORD OF THE DAY</span><span>01 / 12</span></div>
+                <span class="auth-sample-word">serendipity</span>
+                <span class="auth-sample-pronunciation">/ˌser.ənˈdɪp.ə.ti/ &nbsp; noun</span>
+                <div class="auth-sample-definition">Finding something beautiful<br />when you least expect it.</div>
+                <div class="auth-sample-bottom"><span>Little words. Big discoveries.</span><svg class="auth-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12" /></svg></div>
+            </div>
+        </div>
+        <span class="auth-story-footer">Make room for something new.</span>
+    </section>
+    <section class="auth-form-panel" aria-labelledby="auth-heading">
+        <div class="auth-form-content">
+            <span class="auth-form-kicker">YOUR LEARNING SPACE</span>
+            <h1 id="auth-heading">Welcome back.</h1>
+            <p class="auth-form-description">Log in and keep your momentum going.</p>
+            <form id="login-form" class="auth-form">
+                <div class="auth-field">
+                    <label for="username">Username or email</label>
+                    <input id="username" name="username" type="text" autocomplete="username" placeholder="Enter your username or email" required />
+                </div>
+                <div class="auth-field">
+                    <label for="password">Password</label>
+                    <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required />
+                </div>
+                <button type="submit">Log in <svg class="auth-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12" /></svg></button>
+            </form>
+            <p id="auth-message" class="auth-message" role="status" aria-live="polite"></p>
+            <p class="auth-switch">New to Words Up? <a href="signup.html">Create an account <svg class="auth-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12" /></svg></a></p>
+        </div>
+        <p class="auth-panel-footer">A fresh start, one flashcard at a time.</p>
+    </section>
+</main>
 <script src="js/auth.js"></script>
 </body>
 </html>

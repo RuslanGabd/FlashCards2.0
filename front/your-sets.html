@@ -4,49 +4,62 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Your Study Sets - Words Up</title>
+    <meta name="theme-color" content="#244c3f" />
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
 </head>
-<body class="latest-page">
+<body class="latest-page library-page">
+<a class="skip-link" href="#main-content">Skip to content</a>
 <header class="latest-topbar">
-    <a class="brand" href="index.html">Words Up</a>
+    <a class="brand" href="index.html" aria-label="Words Up home"><span class="brand-mark" aria-hidden="true"><i></i><i></i></span>Words<span class="brand-light">Up</span><span class="brand-dot">.</span></a>
     <label class="top-search" aria-label="Search">
-        <span aria-hidden="true">⌕</span>
-        <input id="sets-search" type="search" placeholder="Search your study sets" />
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
+        <input id="sets-search" type="search" placeholder="Search your library…" aria-label="Search your study sets"/>
     </label>
     <nav class="top-actions" aria-label="Primary navigation">
-        <a href="edit-set.html?new=1">Create</a>
-        <a href="login.html">Log in</a>
-        <a class="signup-action" href="signup.html">Sign up</a>
+        <a class="top-create" href="edit-set.html?new=1"><span aria-hidden="true">+</span> Create a set</a>
+        <a href="login.html" data-auth-guest>Log in</a>
+        <a class="signup-action" href="signup.html" data-auth-guest>Sign up</a>
+        <a href="your-sets.html" data-auth-user hidden></a>
     </nav>
 </header>
+<script src="js/auth-header.js"></script>
 
 <div class="latest-layout">
     <aside class="latest-sidebar" aria-label="Dashboard navigation">
+        <p class="nav-caption">YOUR SPACE</p>
         <nav class="side-nav">
-            <a href="index.html"><span aria-hidden="true">⌂</span> Home</a>
-            <a href="index.html"><span aria-hidden="true">◴</span> Latest Activity</a>
-            <a class="active" href="your-sets.html"><span aria-hidden="true">▣</span> Your Study Sets</a>
-            <a href="words-from-text.html"><span aria-hidden="true">≡</span> Words from text</a>
-            <a href="#"><span aria-hidden="true">⚙</span> Settings</a>
+            <a href="index.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/></svg>Overview</a>
+            <a class="active" href="your-sets.html" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 2h8M8 10h8M8 14h5"/></svg>My library</a>
+            <a href="words-from-text.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6Z"/><path d="M14 3v5h5M10 12h5M10 16h5"/></svg>Words from text</a>
         </nav>
+        <section class="side-section">
+            <p>PRACTICE YOUR WAY</p>
+            <a href="flashcards.html"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="6" width="16" height="14" rx="3"/><path d="M2 15V4a2 2 0 0 1 2-2h13M9 11h8M9 15h5"/></svg>Flashcards</a>
+            <a href="practice.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 5 5L20 6"/><path d="M20 13v7H4V4h10"/></svg>Practice</a>
+            <a href="match.html"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/><path d="M14 6h4v4M10 18H6v-4"/></svg>Match</a>
+        </section>
+        <div class="sidebar-note"><span class="note-spark" aria-hidden="true">✳</span><p>A few words today.<br>A whole new world tomorrow.</p><span>Make room for a little learning.</span></div>
+        <p class="sidebar-footer">A little curiosity goes a long way.</p>
     </aside>
 
-    <main class="latest-main">
+    <main class="latest-main" id="main-content">
         <section class="latest-heading">
             <div>
-                <p class="eyebrow">Library</p>
-                <h1>Your Study Sets</h1>
+                <p class="eyebrow">YOUR PERSONAL COLLECTION</p>
+                <h1>Your words, all together.</h1>
+                <p class="heading-description">A home for everything you’re learning. And everything you will.</p>
             </div>
-            <a class="create-set-link" href="edit-set.html?new=1">Create a set</a>
+            <a class="create-set-link" href="edit-set.html?new=1"><span aria-hidden="true">+</span> Create a set</a>
         </section>
 
         <section class="activity-section">
-            <h2>Drafts</h2>
+            <div class="section-heading"><h2>Pick up where you left off</h2><span>Your work in progress</span></div>
             <div id="draft-sets-container" class="activity-list"></div>
         </section>
 
         <section class="activity-section">
-            <h2>Available sets</h2>
+            <div class="section-heading"><h2>Your next study session</h2><span>One set. So many possibilities.</span></div>
             <div id="saved-sets-container" class="activity-list">
                 <article class="activity-item loading-item">
                     <div class="set-thumb">WU</div>
@@ -57,6 +70,7 @@
                 </article>
             </div>
         </section>
+        <footer class="dashboard-footer"><span>Little by little, word by word.</span><span>Made for curious minds <span aria-hidden="true">✳</span></span></footer>
     </main>
 </div>
 

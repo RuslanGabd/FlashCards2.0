@@ -3,103 +3,104 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Latest Activity - Words Up</title>
+    <meta name="theme-color" content="#244c3f"/>
+    <title>Your learning space - Words Up</title>
     <link rel="stylesheet" href="css/style.css"/>
+    <link rel="stylesheet" href="css/dashboard.css"/>
 </head>
 <body class="latest-page">
+<a class="skip-link" href="#main-content">Skip to content</a>
 <header class="latest-topbar">
-    <a class="brand" href="index.html">Words Up</a>
+    <a class="brand" href="index.html" aria-label="Words Up home"><span class="brand-mark" aria-hidden="true"><i></i><i></i></span>Words<span class="brand-light">Up</span><span class="brand-dot">.</span></a>
     <label class="top-search" aria-label="Search">
-        <span aria-hidden="true">⌕</span>
-        <input type="search" placeholder="Search sets, terms, or people"/>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
+        <input id="sets-search" type="search" placeholder="Find your next study set…" aria-label="Search public sets"/>
     </label>
     <nav class="top-actions" aria-label="Primary navigation">
-        <a href="edit-set.html?new=1">Create</a>
-        <a href="login.html">Log in</a>
-        <a class="signup-action" href="signup.html">Sign up</a>
+        <a class="top-create" href="edit-set.html?new=1"><span aria-hidden="true">+</span> Create a set</a>
+        <a href="login.html" data-auth-guest>Log in</a>
+        <a class="signup-action" href="signup.html" data-auth-guest>Sign up</a>
+        <a href="your-sets.html" data-auth-user hidden></a>
     </nav>
 </header>
+<script src="js/auth-header.js"></script>
 
 <div class="latest-layout">
     <aside class="latest-sidebar" aria-label="Dashboard navigation">
+        <p class="nav-caption">YOUR SPACE</p>
         <nav class="side-nav">
-            <a href="#"><span aria-hidden="true">⌂</span> Home</a>
-            <a class="active" href="index.html"><span aria-hidden="true">◴</span> Latest Activity</a>
-            <a href="your-sets.html"><span aria-hidden="true">▣</span> Your Study Sets</a>
-            <a href="words-from-text.html"><span aria-hidden="true">≡</span> Words from text</a>
-            <a href="#"><span aria-hidden="true">⚙</span> Settings</a>
+            <a class="active" href="index.html" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/></svg>Overview</a>
+            <a href="your-sets.html"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 2h8M8 10h8M8 14h5"/></svg>My library</a>
+            <a href="words-from-text.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6Z"/><path d="M14 3v5h5M10 12h5M10 16h5"/></svg>Words from text</a>
         </nav>
-
         <section class="side-section">
-            <p>Your Classes</p>
-            <a href="#">English A1</a>
-            <a href="#">French Practice</a>
-            <a href="#">Join or create a class</a>
+            <p>PRACTICE YOUR WAY</p>
+            <a href="flashcards.html"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="6" width="16" height="14" rx="3"/><path d="M2 15V4a2 2 0 0 1 2-2h13M9 11h8M9 15h5"/></svg>Flashcards</a>
+            <a href="practice.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 5 5L20 6"/><path d="M20 13v7H4V4h10"/></svg>Practice</a>
+            <a href="match.html"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/><path d="M14 6h4v4M10 18H6v-4"/></svg>Match</a>
         </section>
-
-        <section class="side-section">
-            <p>Your Folders</p>
-            <a href="#">Daily words</a>
-            <a href="#">Travel phrases</a>
-            <a href="#">Create a folder</a>
-        </section>
+        <div class="sidebar-note"><span class="note-spark" aria-hidden="true">✳</span><p>A few words today.<br>A whole new world tomorrow.</p><span>Make room for a little learning.</span></div>
+        <p class="sidebar-footer">A little curiosity goes a long way.</p>
     </aside>
 
-    <main class="latest-main">
+    <main class="latest-main" id="main-content">
         <section class="latest-heading">
             <div>
-                <p class="eyebrow">Study dashboard</p>
-                <h1>Latest Activity</h1>
+                <p class="eyebrow">YOUR LEARNING SPACE</p>
+                <h1>A good day to learn.</h1>
+                <p class="heading-description">Pick up a few new words. See where they take you.</p>
             </div>
-            <label class="filter-search">
-                <span>Search</span>
-                <input type="search" placeholder="Filter sets"/>
-            </label>
+            <span class="heading-badge"><span aria-hidden="true">✦</span> One word at a time</span>
         </section>
 
-        <section class="quick-create" aria-label="Quick create">
-            <article>
-                <button class="quick-create-dismiss" type="button" aria-label="Close">×</button>
-                <h2>Create a study set</h2>
-                <p>Create a set for any subject you're learning.</p>
-                <a href="edit-set.html?new=1">Create a study set</a>
-            </article>
-            <article>
-                <button class="quick-create-dismiss" type="button" aria-label="Close">×</button>
-                <h2>Build your library</h2>
-                <p>Keep your public and private sets organized.</p>
-                <a href="edit-set.html?new=1">Add cards</a>
-            </article>
-            <article>
-                <button class="quick-create-dismiss" type="button" aria-label="Close">×</button>
-                <h2>Create set by AI</h2>
-                <p>Paste any text and generate flashcards automatically.</p>
-                <button class="quick-create-action" id="open-ai-create-button" type="button">Create set by AI</button>
-            </article>
+        <section class="dashboard-hero" aria-labelledby="hero-title">
+            <div class="hero-copy">
+                <p class="hero-eyebrow"><span aria-hidden="true"></span> SMALL HABITS, BIG POSSIBILITIES</p>
+                <h2 id="hero-title">Your next chapter<br>starts with <em>a word.</em></h2>
+                <p>Turn the words you find into the words you know.<br>Create a set and make it stick.</p>
+                <a class="hero-button" href="edit-set.html?new=1">Let’s make a study set <span aria-hidden="true"><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></span></a>
+            </div>
+            <div class="hero-art" aria-hidden="true">
+                <span class="art-orbit orbit-one"></span><span class="art-orbit orbit-two"></span>
+                <span class="art-star star-one">✳</span><span class="art-star star-two">✦</span>
+                <div class="art-card art-card-back"><span>MAKE IT A HABIT</span><strong>A little,<br>every day.</strong><i><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></i></div>
+                <div class="art-card art-card-front"><span>WORD BY WORD</span><strong>bonjour<span> /bɔ̃.ʒuʁ/</span></strong><p>hello, a new beginning.</p><div class="art-card-bottom"><span>FR → EN</span><span>✦</span></div></div>
+                <span class="art-caption">A small card. A big possibility.</span>
+            </div>
+        </section>
+
+        <section class="create-section" aria-labelledby="create-heading">
+            <div class="section-heading"><h2 id="create-heading">Make it yours</h2><span>Good learning starts with you</span></div>
+            <div class="quick-create">
+                <a class="action-card" href="edit-set.html?new=1"><span class="action-icon icon-green" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="5" width="15" height="16" rx="3"/><path d="M2 15V4a2 2 0 0 1 2-2h11M9 13h7M12.5 9.5v7"/></svg></span><span class="action-copy"><strong>Start from scratch</strong><span>Your words, your own study set.</span></span><span class="action-arrow" aria-hidden="true"><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></span></a>
+                <button class="action-card" id="open-ai-create-button" type="button"><span class="action-icon icon-peach" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5ZM20 2v4M18 4h4"/></svg></span><span class="action-copy"><strong>A little help from AI <span class="mini-badge">AI</span></strong><span>Turn any text into flashcards.</span></span><span class="action-arrow" aria-hidden="true"><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></span></button>
+                <a class="action-card" href="words-from-text.html"><span class="action-icon icon-lilac" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6ZM14 3v5h5M10 12h5M10 16h5"/></svg></span><span class="action-copy"><strong>Find words in a text</strong><span>Make your next read a lesson.</span></span><span class="action-arrow" aria-hidden="true"><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></span></a>
+            </div>
         </section>
 
         <section class="activity-section">
-            <h2>A few seconds ago</h2>
+            <div class="section-heading"><div><p class="eyebrow">A LITTLE INSPIRATION</p><h2>Discover something new</h2></div><a href="your-sets.html">Explore library <span aria-hidden="true">→</span></a></div>
             <div id="sets-container" class="activity-list">
                 <article class="activity-item loading-item">
                     <div class="set-thumb">WU</div>
                     <div>
                         <p class="set-meta">Loading public sets</p>
-                        <h3>Finding your latest study material...</h3>
+                        <h3>Finding your next discovery…</h3>
                     </div>
                 </article>
             </div>
         </section>
 
-        <section class="activity-section">
-            <h2>Start here</h2>
+        <section class="activity-section practice-section">
+            <div class="section-heading"><h2>A different way to make it stick</h2></div>
             <div class="study-tools">
-                <a href="flashcards.html">Flashcards</a>
-                <a href="practice.html">Practice</a>
-                <a href="words-from-text.html">Words from text</a>
-                <a href="match.html">Match</a>
+                <a href="flashcards.html"><span aria-hidden="true">▱</span><div><strong>Flip a card</strong><small>A fresh way to remember</small></div><span aria-hidden="true"><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></span></a>
+                <a href="practice.html"><span aria-hidden="true">✓</span><div><strong>Test yourself</strong><small>See what’s sticking</small></div><span aria-hidden="true"><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></span></a>
+                <a href="typing.html"><span aria-hidden="true">Aa</span><div><strong>Type it out</strong><small>Let your fingers learn, too</small></div><span aria-hidden="true"><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></span></a>
+                <a href="match.html"><span aria-hidden="true">⌘</span><div><strong>Find a match</strong><small>Make the connection</small></div><span aria-hidden="true"><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></span></a>
             </div>
         </section>
+        <footer class="dashboard-footer"><span>Little by little, word by word.</span><span>Made for curious minds <span aria-hidden="true">✳</span></span></footer>
     </main>
 </div>
 

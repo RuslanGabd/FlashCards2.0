@@ -34,6 +34,48 @@ document.addEventListener("DOMContentLoaded", () => {
     const aiSetLanguage = document.getElementById("ai-set-language");
     const aiSourceText = document.getElementById("ai-source-text");
     const toast = document.getElementById("toast");
+    const searchInput = document.getElementById("sets-search");
+    let publicSets = [];
+
+    function renderSets() {
+        const query = searchInput.value.trim().toLowerCase();
+        const sets = publicSets.filter(set =>
+            `${set.title || ""} ${set.description || ""} ${set.ownerUsername || ""}`.toLowerCase().includes(query)
+        );
+
+        if (!sets.length) {
+            container.innerHTML = `
+                <article class="activity-item empty-state">
+                    <div class="set-thumb" aria-hidden="true">${query ? "⌕" : "+"}</div>
+                    <div>
+                        <h3>${query ? "No sets found. Keep exploring." : "Every collection starts with a word."}</h3>
+                        <p class="set-description">${query ? "Try a different word or search for a creator." : "There are no public sets just yet. Create yours and give a little knowledge a home."}</p>
+                    </div>
+                    ${query ? "" : '<a class="study-link" href="edit-set.html?new=1">Create the first set <span aria-hidden="true"><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></span></a>'}
+                </article>
+            `;
+            return;
+        }
+
+        container.innerHTML = "";
+        sets.forEach(set => {
+            const item = document.createElement("article");
+            item.className = "activity-item clickable-set";
+            item.dataset.setUrl = `flashcards.html?setId=${set.id}`;
+            item.innerHTML = `
+                <div class="set-thumb" aria-hidden="true">${escapeHtml(getInitials(set.title))}</div>
+                <div class="activity-copy">
+                    <p class="set-meta">${set.language === "fr" ? "French" : "English"} · by ${escapeHtml(set.ownerUsername || "Words Up")}</p>
+                    <h3><a class="set-title-link" href="flashcards.html?setId=${set.id}">${escapeHtml(set.title)}</a></h3>
+                    <p class="set-description">${escapeHtml(set.description || "A new set of words to make your own.")}</p>
+                </div>
+                <a class="study-link" href="flashcards.html?setId=${set.id}">Study <span aria-hidden="true"><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12"/></svg></span></a>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    searchInput.addEventListener("input", renderSets);
 
     openAiCreateButton.addEventListener("click", () => {
         aiCreateDialog.showModal();
@@ -84,36 +126,8 @@ document.addEventListener("DOMContentLoaded", () => {
             return response.json();
         })
         .then(sets => {
-            if (!sets.length) {
-                container.innerHTML = `
-                    <article class="activity-item">
-                        <div class="set-thumb">WU</div>
-                        <div>
-                            <p class="set-meta">No public sets yet</p>
-                            <h3>Create your first study set</h3>
-                            <p class="set-description">Use the Create button to add terms and definitions.</p>
-                        </div>
-                    </article>
-                `;
-                return;
-            }
-
-            container.innerHTML = "";
-            sets.forEach(set => {
-                const item = document.createElement("article");
-                item.className = "activity-item clickable-set";
-                item.dataset.setUrl = `flashcards.html?setId=${set.id}`;
-                item.innerHTML = `
-                    <div class="set-thumb">${getInitials(set.title)}</div>
-                    <div class="activity-copy">
-                        <p class="set-meta">Public set · ${set.language === "fr" ? "French" : "English"} · ${escapeHtml(set.ownerUsername || "Words Up")}</p>
-                        <h3>${escapeHtml(set.title)}</h3>
-                        <p class="set-description">${escapeHtml(set.description || "No description")}</p>
-                    </div>
-                    <a class="study-link" href="flashcards.html?setId=${set.id}">Study</a>
-                `;
-                container.appendChild(item);
-            });
+            publicSets = sets;
+            renderSets();
         })
         .catch(error => {
             console.error("Error loading sets:", error);
@@ -123,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div>
                         <p class="set-meta">Connection problem</p>
                         <h3>Error loading sets</h3>
-                        <p class="set-description">Check that the backend is running on localhost:8085.</p>
+                    <p class="set-description">We couldn’t load the sets. Please try again in a moment.</p>
                     </div>
                 </article>
             `;

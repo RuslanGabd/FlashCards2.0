@@ -42,7 +42,7 @@ function renderDraft() {
     const title = draft.meta.title || "Untitled draft";
     draftContainer.innerHTML = `
         <article class="activity-item clickable-set" data-set-url="flashcards.html">
-            <div class="set-thumb">${getInitials(title)}</div>
+            <div class="set-thumb">${escapeHtml(getInitials(title))}</div>
             <div>
                 <p class="set-meta">Local draft · ${draft.cards.length} cards</p>
                 <h3>${escapeHtml(title)}</h3>
@@ -85,7 +85,7 @@ function renderLocalSets() {
         item.className = "activity-item clickable-set";
         item.dataset.setUrl = `flashcards.html?localSetId=${encodeURIComponent(set.id)}`;
         item.innerHTML = `
-            <div class="set-thumb">${getInitials(set.title)}</div>
+            <div class="set-thumb">${escapeHtml(getInitials(set.title))}</div>
             <div class="activity-copy">
                 <p class="set-meta">Local set · ${getLanguageName(set.language)} · ${set.cards?.length || 0} cards</p>
                 <h3>${escapeHtml(set.title || "Untitled set")}</h3>
@@ -119,7 +119,7 @@ async function loadSavedSets() {
                 <div>
                     <p class="set-meta">Connection problem</p>
                     <h3>Error loading sets</h3>
-                    <p class="set-description">Check that the backend is running on localhost:8085.</p>
+                    <p class="set-description">We couldn’t load the sets. Please try again in a moment.</p>
                 </div>
             </article>
         `;
@@ -153,9 +153,9 @@ function renderPublicSets(sets) {
         item.className = "activity-item clickable-set";
         item.dataset.setUrl = `flashcards.html?setId=${set.id}`;
         item.innerHTML = `
-            <div class="set-thumb">${getInitials(set.title)}</div>
+            <div class="set-thumb">${escapeHtml(getInitials(set.title))}</div>
             <div class="activity-copy">
-                <p class="set-meta">Public set · ${getLanguageName(set.language)} · ${escapeHtml(set.ownerUsername || "Words Up")}</p>
+                <p class="set-meta">${set.public ? "Public" : "Private"} set · ${getLanguageName(set.language)} · ${escapeHtml(set.ownerUsername || "Words Up")}</p>
                 <h3>${escapeHtml(set.title)}</h3>
                 <p class="set-description">${escapeHtml(set.description || "No description")}</p>
             </div>
