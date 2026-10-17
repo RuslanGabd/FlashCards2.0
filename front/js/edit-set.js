@@ -84,7 +84,7 @@ doneButton.addEventListener("click", async () => {
     saveDraft();
     const savedSet = await saveSet();
     acceptCurrentDuplicateTerms();
-    showToast(savedSet.remote ? "Set saved to PostgreSQL" : "Set saved locally");
+    showToast(savedSet.remote ? "Set saved to your account" : "Set saved locally");
 });
 
 createButton.addEventListener("click", () => {
@@ -237,6 +237,7 @@ suggestionsToggle.addEventListener("change", () => {
 
 searchButton.addEventListener("click", () => {
     searchPanel.hidden = !searchPanel.hidden;
+    searchButton.setAttribute("aria-expanded", String(!searchPanel.hidden));
     if (!searchPanel.hidden) {
         cardSearch.focus();
     } else {
@@ -308,8 +309,22 @@ document.addEventListener("click", event => {
     hideAllSuggestions();
 });
 
+function editorIcon(name) {
+    const paths = {
+        up: '<path d="M12 19V5m-6 6 6-6 6 6"/>',
+        down: '<path d="M12 5v14m-6-6 6 6 6-6"/>',
+        trash: '<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>',
+        image: '<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/>',
+        globe: '<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/>',
+        lock: '<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>',
+    };
+    return `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[name]}</svg>`;
+}
+
 function renderCards() {
     cards = cards.map(ensureCardClientId);
+    const count = document.getElementById("editor-card-count");
+    if (count) count.textContent = `${cards.length} ${cards.length === 1 ? "card" : "cards"}`;
     const duplicateTermCounts = getDuplicateTermCounts(cards);
     const visibleCards = cards
         .map((card, index) => ({ card, index }))
@@ -332,29 +347,29 @@ function renderCards() {
         row.className = "editor-card";
         const duplicateClass = shouldWarnDuplicateTerm(card.term, duplicateTermCounts) ? " duplicate-term-input" : "";
         row.innerHTML = `
-            <div class="card-number">${index + 1}</div>
+            <div class="card-number">CARD ${String(index + 1).padStart(2, "0")}</div>
             <div class="card-menu">
-                <button class="card-action-button" type="button" data-action="move-up" data-index="${index}" aria-label="Move card up">↑</button>
-                <button class="card-action-button" type="button" data-action="move-down" data-index="${index}" aria-label="Move card down">↓</button>
-                <button class="card-action-button" type="button" data-action="delete" data-index="${index}" aria-label="Delete card">⌫</button>
+                <button class="card-action-button" type="button" data-action="move-up" data-index="${index}" aria-label="Move card up" title="Move card up">${editorIcon("up")}</button>
+                <button class="card-action-button" type="button" data-action="move-down" data-index="${index}" aria-label="Move card down" title="Move card down">${editorIcon("down")}</button>
+                <button class="card-action-button" type="button" data-action="delete" data-index="${index}" aria-label="Delete card" title="Delete card">${editorIcon("trash")}</button>
             </div>
             <div class="editor-field">
-                <input class="${duplicateClass.trim()}" value="${escapeAttribute(card.term)}" aria-label="Term ${index + 1}" data-card-index="${index}" data-field="term" />
                 <span>${getSourceLanguageName().toUpperCase()} TERM</span>
+                <input class="${duplicateClass.trim()}" value="${escapeAttribute(card.term)}" placeholder="A word worth remembering" maxlength="2000" aria-label="Term ${index + 1}" data-card-index="${index}" data-field="term" />
                 <div class="editor-suggestions" data-suggestion-list="term" data-card-index="${index}" hidden></div>
             </div>
             <div class="editor-field">
-                <input value="${escapeAttribute(card.definition)}" aria-label="Definition ${index + 1}" data-card-index="${index}" data-field="definition" />
                 <span>RUSSIAN DEFINITION</span>
+                <input value="${escapeAttribute(card.definition)}" placeholder="What does it mean?" maxlength="5000" aria-label="Definition ${index + 1}" data-card-index="${index}" data-field="definition" />
                 <div class="editor-suggestions" data-suggestion-list="definition" data-card-index="${index}" hidden></div>
             </div>
             <div class="editor-field editor-example-field">
-                <input value="${escapeAttribute(card.exampleSentence || "")}" maxlength="2000" aria-label="Example sentence ${index + 1}" data-card-index="${index}" data-field="exampleSentence" />
-                <span>EXAMPLE SENTENCE</span>
+                <span>EXAMPLE SENTENCE <small>(optional)</small></span>
+                <input value="${escapeAttribute(card.exampleSentence || "")}" placeholder="Give this word a little context…" maxlength="2000" aria-label="Example sentence ${index + 1}" data-card-index="${index}" data-field="exampleSentence" />
                 <button class="generate-example-button" type="button" data-action="generate-example" data-index="${index}">Generate sentence</button>
             </div>
             <button class="image-drop ${card.image ? "has-image" : ""}" type="button" data-action="image" data-index="${index}" aria-label="Add image to card ${index + 1}">
-                ${card.image ? `<img src="${card.image}" alt="" />` : `<span class="image-icon" aria-hidden="true">▧</span>`}
+                ${card.image ? `<img src="${card.image}" alt="" />` : `<span class="image-icon">${editorIcon("image")}</span>`}
                 <strong>${card.image ? "Change" : "Image"}</strong>
             </button>
         `;
@@ -1334,7 +1349,7 @@ function createStarterDraft() {
 function renderVisibility() {
     visibilityButton.setAttribute("aria-pressed", String(setMeta.isPublic));
     visibilityButton.innerHTML = `
-        <span aria-hidden="true">${setMeta.isPublic ? "◎" : "○"}</span>
+        ${editorIcon(setMeta.isPublic ? "globe" : "lock")}
         ${setMeta.isPublic ? "Public" : "Private"}
     `;
 }

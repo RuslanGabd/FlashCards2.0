@@ -1,0 +1,221 @@
+/* The set editor shares the dashboard's paper, forest and lime palette. */
+.editor-page {
+    --surface: #fff;
+    --surface-strong: #f7f8f4;
+    --surface-soft: #edf3e4;
+    --editor-muted: #65715f;
+    background: #f6f5f1;
+    color: #253431;
+    font-size: 14px;
+}
+.editor-page .editor-header { grid-template-columns: 200px minmax(0, 1fr) auto; height: 82px; gap: 30px; padding: 0 36px; }
+.editor-breadcrumb { display: flex; align-items: center; gap: 12px; font-size: 12px; color: #65715f; }
+.editor-breadcrumb a { color: inherit; text-decoration: none; }
+.editor-breadcrumb a:hover { color: #244c3f; text-decoration: underline; text-underline-offset: 4px; }
+.editor-breadcrumb > span { color: #344b3c; font-weight: 550; }
+.editor-breadcrumb svg { width: 13px; height: 13px; color: #8a967f; }
+.editor-page .done-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 18px; border-radius: 8px; background: #244c3f; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
+.editor-page .done-button svg { width: 17px; height: 17px; }
+.editor-page .done-button:hover { background: #193c30; filter: none; }
+.editor-page .editor-shell { width: min(1080px, calc(100% - 80px)); margin: 0 auto; padding: 27px 0 25px; }
+.editor-back { display: inline-flex; align-items: center; gap: 7px; text-decoration: none; font-size: 11px; color: #65715f; margin-bottom: 23px; }
+.editor-back svg { width: 15px; height: 15px; }
+.editor-back:hover { color: #244c3f; }
+.editor-page .set-meta-heading { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 27px; }
+.editor-page .set-meta-heading h1 { font-size: clamp(29px, 3vw, 37px); font-weight: 550; color: #253431; letter-spacing: -1.25px; line-height: 1.2; }
+.editor-intro .eyebrow { font-size: 9px; margin-bottom: 9px; }
+.editor-intro-description { font-size: 12px; color: var(--editor-muted); margin-top: 9px; }
+.editor-intro-art { width: 76px; height: 76px; display: grid; place-items: center; transform: rotate(5deg); }
+.editor-intro-art svg { width: 65px; height: 65px; stroke: #5c784a; stroke-width: 1.2; }
+.editor-intro-art rect:first-child { fill: #e1eacb; }
+.editor-intro-art rect:nth-child(2) { fill: #fdfdf8; }
+.editor-page .set-meta-panel { background: #fff; border: 1px solid #e1e5da; border-radius: 15px; padding: 25px 28px 28px; margin-bottom: 30px; }
+.meta-panel-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+.editor-section-icon { width: 38px; height: 38px; border-radius: 10px; background: #eff3e5; display: grid; place-items: center; color: #6c8752; flex-shrink: 0; }
+.editor-section-icon svg { width: 20px; height: 20px; }
+.meta-panel-heading h2 { font-size: 15px; font-weight: 600; letter-spacing: -.25px; }
+.meta-panel-heading p { font-size: 11px; color: var(--editor-muted); margin-top: 3px; }
+.set-meta-grid { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 30px; }
+.editor-page .set-meta-field { display: grid; gap: 8px; margin-bottom: 18px; }
+.editor-page .set-meta-field:last-child { margin-bottom: 0; }
+.set-meta-field > span { font-size: 11px; font-weight: 600; color: #4c5e47; }
+.set-meta-field small { color: var(--editor-muted); font-weight: 400; margin-left: 3px; font-size: 10px; }
+.editor-page .set-meta-field input, .editor-page .set-meta-field textarea { min-height: 48px; background: #fcfcf9; border: 1px solid #dfe5d7; border-radius: 8px; color: #253431; font-size: 14px; font-weight: 450; padding: 13px 15px; }
+.editor-page .set-meta-field input { font-size: 16px; }
+.editor-page .set-meta-field textarea { min-height: 83px; line-height: 1.6; resize: vertical; }
+.editor-page input::placeholder, .editor-page textarea::placeholder { color: #65715f; opacity: 1; font-weight: 400; }
+.editor-page .set-meta-field input:focus, .editor-page .set-meta-field textarea:focus { outline: none; border-color: #7d9d60; box-shadow: 0 0 0 3px #e7efd9; }
+.set-preferences { display: flex; flex-direction: column; gap: 17px; background: #f7f8f2; border: 1px solid #edf0e5; border-radius: 10px; padding: 18px; }
+.preferences-heading { font-size: 8px; letter-spacing: 1.2px; color: #647456; font-weight: 650; margin-bottom: 1px; }
+.preference-field { display: grid; gap: 8px; }
+.preference-field > span, .editor-page .set-language-field > span { font-size: 10px; font-weight: 500; color: #65715f; }
+.editor-page .visibility-pill { display: flex; align-items: center; justify-content: flex-start; gap: 9px; min-height: 38px; width: 100%; border: 1px solid #d9e4c6; border-radius: 7px; padding: 8px 11px; background: #eaf1db; color: #466037; font-size: 11px; font-weight: 550; margin: 0; }
+.editor-page .visibility-pill svg { width: 16px; height: 16px; }
+.editor-page .visibility-pill[aria-pressed="false"] { color: #6f5e48; background: #f3ede2; border-color: #e5d9c4; }
+.editor-page .visibility-pill:hover { filter: none; border-color: #93ad75; }
+.editor-page .set-language-field { display: grid; gap: 8px; margin: 0; font-weight: 500; }
+.editor-page .set-language-field select { width: 100%; min-height: 38px; border: 1px solid #dce2d2; border-radius: 7px; background: #fff; color: #455a39; font-size: 11px; font-weight: 500; padding: 0 12px; }
+.editor-page .set-language-field select:focus-visible { outline: 2px solid #7e9c5e; }
+.cards-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 17px; }
+.cards-section-heading .eyebrow { margin-bottom: 5px; font-size: 8px; }
+.cards-section-heading h2 { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 550; letter-spacing: -.55px; }
+.card-count { display: inline-flex; align-items: center; min-height: 23px; padding: 2px 8px; border: 1px solid #e1e7d7; border-radius: 20px; color: #62734e; font-size: 9px; font-weight: 500; letter-spacing: 0; white-space: nowrap; }
+.cards-section-heading > p { font-size: 10px; color: var(--editor-muted); }
+.editor-page .editor-toolbar { display: flex; flex-direction: row; justify-content: space-between; align-items: center; flex-wrap: wrap; min-height: 66px; gap: 14px; margin-bottom: 17px; padding: 13px 16px; background: #eeefe7; border: 1px solid #e1e5d9; border-radius: 10px; }
+.editor-page .toolbar-group { gap: 8px; flex-wrap: wrap; }
+.editor-page .pill-button { display: inline-flex; align-items: center; gap: 7px; min-height: 35px; border: 1px solid #dce2d2; border-radius: 7px; background: #fff; color: #455a38; padding: 7px 11px; font-size: 10px; font-weight: 550; }
+.editor-page .pill-button svg { width: 15px; height: 15px; }
+.editor-page .pill-button:hover { background: #f7f9f1; border-color: #a9bb92; filter: none; }
+.editor-page .toolbar-actions { gap: 17px; }
+.toolbar-icon-actions { display: flex; gap: 4px; }
+.editor-page .round-button { width: 33px; height: 33px; display: inline-grid; place-items: center; border: 1px solid transparent; border-radius: 6px; background: transparent; color: #64725b; }
+.editor-page .round-button svg { width: 17px; height: 17px; }
+.editor-page .round-button:hover { background: #fff; color: #244c3f; border-color: #dbe2d0; filter: none; }
+.editor-page #delete-all-button:hover { background: #fbede6; border-color: #ead3c5; color: #a75d40; }
+.editor-page .suggestions-toggle { margin: 0; gap: 8px; color: #59694e; font-size: 10px; font-weight: 500; cursor: pointer; }
+.editor-page .toggle-ui { width: 35px; height: 19px; background: #cbd2c2; transition: background .18s; }
+.editor-page .toggle-ui::after { width: 13px; height: 13px; right: auto; left: 3px; top: 50%; background: #fff; transition: left .18s; }
+.editor-page .suggestions-toggle input:checked + .toggle-ui { background: #476746; }
+.editor-page .suggestions-toggle input:checked + .toggle-ui::after { left: 19px; }
+.editor-page .suggestions-toggle input:focus-visible + .toggle-ui { outline: 3px solid #86a565; outline-offset: 4px; }
+.editor-page .toolbar-panel { background: #fff; border: 1px solid #e1e5d9; border-radius: 10px; padding: 17px; margin-bottom: 18px; }
+.editor-page .toolbar-panel label { color: #627154; text-transform: none; font-size: 11px; font-weight: 500; letter-spacing: 0; }
+.editor-page .toolbar-panel input { border: 1px solid #dfe5d7; min-height: 42px; color: #253431; background: #f8f9f4; font-size: 13px; }
+.editor-page .toolbar-panel input:focus { outline: 2px solid #9bb57b; }
+.editor-page .editor-cards { display: grid; gap: 17px; }
+.editor-page .editor-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 92px; gap: 19px 22px; min-height: 0; padding: 62px 23px 23px; border: 1px solid #e1e5da; border-radius: 13px; background: #fff; box-shadow: 0 2px 2px #34482c02; }
+.editor-page .card-number { left: 23px; top: 17px; padding: 3px 9px; border-radius: 6px; background: #eff3e7; color: #5a7347; font-size: 10px; font-weight: 600; letter-spacing: .5px; }
+.editor-page .card-menu { top: 13px; right: 17px; gap: 4px; }
+.editor-page .card-action-button { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 6px; color: #6e7b61; font-weight: 500; }
+.editor-page .card-action-button svg { width: 15px; height: 15px; }
+.editor-page .card-action-button:hover { background: #f0f4e8; color: #244c3f; }
+.editor-page .card-action-button[data-action="delete"]:hover { color: #a75d40; background: #fbede6; }
+.editor-page .editor-field { min-width: 0; gap: 8px; align-content: start; }
+.editor-page .editor-field > span { color: #647458; font-size: 9px; font-weight: 550; letter-spacing: .75px; line-height: 1.6; }
+.editor-page .editor-field > span small { text-transform: none; letter-spacing: 0; font-size: 9px; font-weight: 400; }
+.editor-page .editor-field input { width: 100%; min-width: 0; min-height: 47px; padding: 11px 13px; border: 1px solid #dde4d4; border-radius: 7px; color: #34442e; background: #fafbf6; font-size: 15px; font-weight: 450; line-height: 1.5; }
+.editor-page .editor-field input:focus { outline: none; border-color: #7d9d60; background: #fff; box-shadow: 0 0 0 3px #eaf0df; }
+.editor-page .editor-field input.duplicate-term-input { color: #b34531; border-color: #d79281; background: #fff6f1; }
+.editor-page .editor-example-field { grid-column: 1 / 3; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.editor-page .editor-example-field > span { grid-column: 1; grid-row: 1; }
+.editor-page .editor-example-field > input { grid-column: 1 / -1; grid-row: 2; font-size: 12px; }
+.editor-page .generate-example-button { grid-column: 2; grid-row: 1; display: inline-flex; align-items: center; min-height: 24px; border-radius: 5px; padding: 2px 7px; background: #f3efe6; color: #7c6445; font-size: 9px; font-weight: 500; }
+.editor-page .generate-example-button:hover { background: #ede4d3; }
+.editor-page .image-drop { position: relative; left: auto; top: auto; right: auto; bottom: auto; grid-column: 3; grid-row: 1 / 3; width: 100%; height: auto; min-height: 94px; border: 1px dashed #cbd6ba; border-radius: 9px; background: #fafbf6; color: #73865c; gap: 7px; font-size: 10px; }
+.editor-page .image-drop .image-icon { display: grid; place-items: center; }
+.editor-page .image-drop svg { width: 23px; height: 23px; }
+.editor-page .image-drop strong { font-size: 9px; font-weight: 500; color: #5f7549; }
+.editor-page .image-drop:hover { border-color: #90a775; background: #f2f6e9; filter: none; }
+.editor-page .image-drop.has-image { border-style: solid; }
+.editor-page .image-drop.has-image strong { background: #244c3fd9; color: #fff; font-size: 9px; padding: 4px 8px; }
+.editor-page .editor-suggestions { margin-top: 0; gap: 5px; }
+.editor-page .editor-suggestion-button { min-height: 35px; padding: 7px 10px; background: #f7f9f1; border: 1px solid #dce6cd; color: #46603a; font-size: 12px; font-weight: 450; }
+.editor-page .editor-suggestion-button:hover, .editor-page .editor-suggestion-button.is-active { background: #eaf1db; border-color: #93ae76; }
+.editor-page .editor-suggestion-button:focus-visible { outline: 2px solid #7a995c; outline-offset: 2px; }
+.editor-page .empty-editor-state { border: 1px dashed #cdd8be; border-radius: 12px; padding: 38px 20px; background: #fbfcf8; color: #34482c; }
+.editor-page .empty-editor-state h2 { font-size: 17px; font-weight: 550; letter-spacing: -.4px; }
+.editor-page .empty-editor-state p { font-size: 12px; color: var(--editor-muted); }
+.editor-page .diagram-preview { background: #fff; border: 1px solid #e1e5d9; border-radius: 12px; margin-bottom: 18px; padding: 20px; min-height: 130px; grid-template-columns: minmax(0, 1fr) minmax(100px, 220px) auto; gap: 20px; }
+.editor-page .diagram-preview p { color: #65715f; font-size: 9px; font-weight: 500; }
+.editor-page .diagram-preview h2 { color: #34482c; font-size: 15px; font-weight: 550; overflow-wrap: anywhere; }
+.editor-page .diagram-preview img { max-height: 110px; background: #f6f8ef; }
+.editor-page .diagram-preview button { background: #f3efe6; color: #7b6046; border-radius: 7px; font-size: 11px; font-weight: 500; padding: 9px 12px; }
+.editor-page .editor-bottom-actions { display: grid; grid-template-columns: 1fr; gap: 0; min-height: 0; padding-top: 19px; }
+.editor-page .add-card-actions { display: flex; grid-column: auto; justify-content: center; flex-wrap: wrap; gap: 10px; padding: 4px 0 30px; }
+.editor-page .add-card-button { display: inline-flex; justify-content: center; align-items: center; gap: 7px; min-width: 0; width: auto; min-height: 42px; padding: 10px 21px; border: 1px solid #cad8b5; border-radius: 8px; background: #edf3e3; color: #4e6a38; font-size: 12px; font-weight: 550; }
+.editor-page .add-card-button svg { width: 17px; height: 17px; }
+.editor-page .add-by-ai-button { background: #fff; border-color: #e4dbc9; color: #866a45; }
+.editor-page .add-card-button:hover { background: #e2edcf; filter: none; }
+.editor-page .add-by-ai-button:hover { background: #f7f1e6; }
+.editor-publish-bar { display: flex; justify-content: space-between; align-items: center; gap: 20px; background: #eaf0df; border: 1px solid #dbe5cd; border-radius: 12px; padding: 23px 26px; }
+.editor-publish-bar p { font-size: 14px; font-weight: 550; color: #3f5632; letter-spacing: -.25px; }
+.editor-publish-bar > div > span { display: block; font-size: 11px; color: #65715f; margin-top: 4px; }
+.editor-page .bottom-create-actions { display: flex; grid-column: auto; justify-self: auto; align-self: auto; flex-wrap: wrap; gap: 9px; }
+.editor-page .primary-create-button, .editor-page .secondary-create-button { display: inline-flex; justify-content: center; align-items: center; gap: 9px; min-height: 42px; border-radius: 7px; border: 1px solid transparent; padding: 10px 16px; font-size: 11px; font-weight: 550; flex: none; }
+.editor-page .primary-create-button { background: #244c3f; color: #fff; }
+.editor-page .primary-create-button svg { width: 16px; height: 16px; }
+.editor-page .secondary-create-button { background: #fff; color: #4f693d; border-color: #d4dfc4; }
+.editor-page .primary-create-button:hover { background: #193c30; filter: none; }
+.editor-page .secondary-create-button:hover { background: #f8faf4; filter: none; }
+.editor-footer { display: flex; justify-content: space-between; gap: 15px; margin-top: 23px; color: #65715f; font-size: 9px; }
+.editor-page .import-dialog { margin: auto; width: min(600px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; background: #fff; color: #253431; border: 1px solid #dce4d3; border-radius: 16px; box-shadow: 0 25px 100px #203e3240; }
+.editor-page .import-dialog::backdrop { background: #182d286e; backdrop-filter: blur(4px); }
+.editor-page .import-dialog form { padding: 27px; }
+.editor-page .dialog-header { margin-bottom: 13px; }
+.editor-page .dialog-header h2 { font-size: 23px; font-weight: 550; letter-spacing: -.6px; }
+.editor-page .dialog-header button { display: grid; place-items: center; width: 29px; height: 29px; flex-shrink: 0; border-radius: 6px; color: #5b704c; background: #f0f4e8; font-weight: 400; font-size: 24px; line-height: 1; }
+.editor-page .import-dialog p { font-size: 12px; color: #65715f; line-height: 1.8; }
+.editor-page .import-dialog textarea { min-height: 190px; padding: 15px; border: 1px solid #dfe6d5; border-radius: 9px; background: #f8faf3; color: #34482c; font-size: 13px; line-height: 1.7; }
+.editor-page .import-dialog textarea:focus { outline: 2px solid #92ac74; }
+.editor-page .dialog-actions button { border-radius: 7px; font-size: 12px; font-weight: 550; }
+.editor-page .shortcut-list p { border-bottom: 1px solid #e3e9da; padding: 12px 0; margin: 0; }
+.editor-page .shortcut-list strong { color: #4b653a; font-size: 11px; font-weight: 600; }
+.editor-page .shortcut-list span { color: #65715f; font-size: 11px; }
+.editor-page button:disabled { opacity: .6; cursor: wait; }
+@media (max-width: 900px) {
+    .editor-page .editor-header { grid-template-columns: 170px minmax(0, 1fr) auto; padding: 0 25px; gap: 20px; }
+    .editor-page .editor-shell { width: calc(100% - 48px); }
+    .set-meta-grid { grid-template-columns: minmax(0, 1fr) 200px; gap: 23px; }
+    .editor-page .editor-card { gap: 18px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 76px; }
+    .editor-publish-bar { padding: 22px; }
+    .editor-publish-bar p { font-size: 12px; }
+    .editor-publish-bar > div > span { font-size: 10px; }
+}
+@media (max-width: 680px) {
+    .editor-page .editor-header { grid-template-columns: 1fr auto; height: 74px; min-height: 74px; padding: 0 20px; position: sticky; }
+    .editor-breadcrumb { display: none; }
+    .editor-page .editor-header .done-button { grid-row: 1; grid-column: 2; padding: 0 13px; min-height: 37px; font-size: 11px; }
+    .editor-page .editor-shell { width: calc(100% - 36px); padding-top: 20px; }
+    .editor-back { margin-bottom: 20px; font-size: 10px; }
+    .editor-page .set-meta-heading { margin-bottom: 24px; }
+    .editor-page .set-meta-heading h1 { font-size: 30px; }
+    .editor-intro .eyebrow { font-size: 7px; letter-spacing: 1.1px; }
+    .editor-intro-description { font-size: 11px; max-width: 230px; }
+    .editor-intro-art { display: none; }
+    .editor-page .set-meta-panel { padding: 20px; border-radius: 12px; margin-bottom: 25px; }
+    .meta-panel-heading { align-items: flex-start; margin-bottom: 21px; gap: 10px; }
+    .meta-panel-heading h2 { font-size: 13px; }
+    .meta-panel-heading p { font-size: 10px; }
+    .editor-section-icon { width: 32px; height: 32px; border-radius: 8px; }
+    .editor-section-icon svg { width: 17px; height: 17px; }
+    .set-meta-grid { grid-template-columns: 1fr; gap: 19px; }
+    .editor-page .set-meta-field input, .editor-page .set-meta-field textarea { font-size: 16px; padding: 11px 12px; }
+    .set-preferences { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; padding: 15px; }
+    .preferences-heading { grid-column: 1 / -1; margin-bottom: 0; }
+    .preference-field > span, .editor-page .set-language-field > span { font-size: 9px; }
+    .editor-page .set-language-field { align-content: start; }
+    .editor-page .visibility-pill, .editor-page .set-language-field select { min-height: 38px; font-size: 10px; padding-left: 9px; }
+    .cards-section-heading { margin-bottom: 15px; }
+    .cards-section-heading > p { display: none; }
+    .cards-section-heading h2 { font-size: 20px; }
+    .editor-page .editor-toolbar { gap: 12px; padding: 13px; }
+    .editor-page .toolbar-actions { width: 100%; justify-content: space-between; gap: 9px; }
+    .editor-page .editor-cards { gap: 14px; }
+    .editor-page .editor-card { grid-template-columns: minmax(0, 1fr); gap: 18px; padding: 57px 20px 20px; border-radius: 11px; }
+    .editor-page .card-number { left: 20px; }
+    .editor-page .card-menu { right: 13px; }
+    .editor-page .editor-field, .editor-page .editor-example-field { grid-column: 1; }
+    .editor-page .editor-field input { font-size: 16px; }
+    .editor-page .editor-example-field > input { font-size: 16px; }
+    .editor-page .editor-example-field > span { font-size: 8px; letter-spacing: .4px; }
+    .editor-page .generate-example-button { font-size: 9px; }
+    .editor-page .image-drop { grid-column: 1; grid-row: auto; min-height: 58px; display: flex; align-items: center; justify-content: center; gap: 9px; }
+    .editor-page .image-drop svg { width: 20px; height: 20px; }
+    .editor-page .image-drop strong { font-size: 10px; }
+    .editor-page .image-drop.has-image { min-height: 110px; }
+    .editor-page .add-card-actions { display: flex; flex-wrap: nowrap; gap: 9px; padding: 0 0 24px; }
+    .editor-page .add-card-button { flex: 1; padding: 10px; font-size: 11px; }
+    .editor-publish-bar { flex-direction: column; align-items: stretch; gap: 17px; padding: 20px; text-align: center; }
+    .editor-page .bottom-create-actions { flex-wrap: nowrap; justify-content: center; }
+    .editor-page .primary-create-button, .editor-page .secondary-create-button { flex: 1; padding: 9px; font-size: 10px; gap: 6px; }
+    .editor-page .primary-create-button svg { width: 14px; height: 14px; }
+    .editor-footer { flex-direction: column; gap: 5px; font-size: 8px; text-align: center; }
+    .editor-page .diagram-preview { grid-template-columns: 1fr; padding: 18px; gap: 13px; }
+    .editor-page .diagram-preview button { justify-self: start; }
+    .editor-page .import-dialog form { padding: 22px; }
+    .editor-page .dialog-header h2 { font-size: 20px; }
+    .editor-page .import-dialog textarea { font-size: 16px; }
+    .editor-page .shortcut-list p { flex-wrap: wrap; gap: 5px; }
+    .editor-page .shortcut-list span { text-align: right; margin-left: auto; }
+    .editor-page .toast { width: max-content; max-width: calc(100% - 32px); text-align: center; font-size: 12px; }
+}

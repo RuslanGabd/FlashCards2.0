@@ -3,57 +3,48 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#244c3f" />
     <title>Edit Set - Words Up</title>
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+    <link rel="stylesheet" href="css/editor-design.css" />
 </head>
-<body class="editor-page">
-<header class="editor-topbar">
-    <a class="back-link" href="index.html" aria-label="Back to set">
-        <span aria-hidden="true">&lsaquo;</span>
-        Back to set
-    </a>
-    <button class="done-button" id="done-button" type="button">Done</button>
+<body class="editor-page latest-page">
+<a class="skip-link" href="#main-content">Skip to editor</a>
+<header class="latest-topbar editor-header">
+    <a class="brand" href="index.html" aria-label="Words Up home"><span class="brand-mark" aria-hidden="true"><i></i><i></i></span>Words<span class="brand-light">Up</span><span class="brand-dot">.</span></a>
+    <nav class="editor-breadcrumb" aria-label="Breadcrumb">
+        <a href="your-sets.html">My library</a><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg><span aria-current="page">Set editor</span>
+    </nav>
+    <button class="done-button" id="done-button" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>Save set</button>
 </header>
 
-<main class="editor-shell">
+<main class="editor-shell" id="main-content">
+    <div class="editor-intro">
+        <a class="editor-back" href="your-sets.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg>Back to my library</a>
+        <div class="set-meta-heading"><div><p class="eyebrow">A LITTLE CURIOSITY, A NEW COLLECTION</p><h1>Make it your own.</h1><p class="editor-intro-description">Gather your words. Add a little meaning. Make them stick.</p></div><span class="editor-intro-art" aria-hidden="true"><svg viewBox="0 0 64 64"><rect x="12" y="8" width="33" height="43" rx="6" transform="rotate(-12 28 29)"/><rect x="23" y="17" width="31" height="40" rx="6" transform="rotate(9 38 37)"/><path d="M32 31h13M32 37h9"/></svg></span></div>
+    </div>
+
     <section class="set-meta-panel" aria-label="Set details">
-        <div class="set-meta-heading">
-            <h1>Create a new flashcard set</h1>
-            <div class="set-create-actions">
-                <button class="secondary-create-button" id="create-button" type="button">Create</button>
-                <button class="primary-create-button" id="create-practice-button" type="button">Create and practice</button>
+        <div class="meta-panel-heading"><span class="editor-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6ZM14 3v5h5M10 12h5M10 16h5"/></svg></span><div><h2>The beginning of something good</h2><p>Give your collection a name and a little context.</p></div></div>
+        <div class="set-meta-grid">
+            <div class="set-meta-inputs">
+                <label class="set-meta-field" for="set-title"><span>Set title</span><input id="set-title" type="text" placeholder="e.g. Words for everyday adventures" autocomplete="off" maxlength="100" /></label>
+                <label class="set-meta-field" for="set-description"><span>Description <small>(optional)</small></span><textarea id="set-description" rows="2" placeholder="What will you discover in this set?" maxlength="2000"></textarea></label>
+            </div>
+            <div class="set-preferences">
+                <p class="preferences-heading">MAKE IT YOURS</p>
+                <div class="preference-field"><span>Who can study this set?</span><button class="visibility-pill" id="visibility-button" type="button" aria-pressed="true" title="Toggle public or private visibility">Public</button></div>
+                <label class="set-language-field" for="set-language"><span>Cards language</span><select id="set-language"><option value="en">English</option><option value="fr">French</option></select></label>
             </div>
         </div>
-
-        <div class="set-options-row">
-            <button class="visibility-pill" id="visibility-button" type="button" aria-pressed="true">
-                <span aria-hidden="true">◎</span>
-                Public
-            </button>
-            <label class="set-language-field">
-                <span>Cards language</span>
-                <select id="set-language">
-                    <option value="en">English</option>
-                    <option value="fr">French</option>
-                </select>
-            </label>
-        </div>
-
-        <label class="set-meta-field">
-            <span class="visually-hidden">Title</span>
-            <input id="set-title" type="text" placeholder="Title" autocomplete="off" />
-        </label>
-
-        <label class="set-meta-field">
-            <span class="visually-hidden">Description</span>
-            <textarea id="set-description" rows="2" placeholder="Add a description..."></textarea>
-        </label>
     </section>
 
+    <div class="cards-section-heading"><div><p class="eyebrow">WORD BY WORD</p><h2>Your flashcards <span class="card-count" id="editor-card-count" aria-live="polite"></span></h2></div><p>A word, a meaning, a new connection.</p></div>
     <section class="editor-toolbar" aria-label="Set tools">
         <div class="toolbar-group">
-            <button class="pill-button" id="import-button" type="button"><span aria-hidden="true">+</span> Import</button>
-            <button class="pill-button" id="diagram-button" type="button"><span aria-hidden="true">+</span> Add diagram</button>
+            <button class="pill-button" id="import-button" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5"/></svg>Import cards</button>
+            <button class="pill-button" id="diagram-button" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/></svg>Add diagram</button>
             <input id="diagram-input" type="file" accept="image/*" hidden />
         </div>
 
@@ -63,10 +54,12 @@
                 <input id="suggestions-toggle" type="checkbox" checked />
                 <span class="toggle-ui"></span>
             </label>
-            <button class="round-button" id="search-button" type="button" aria-label="Search">⌕</button>
-            <button class="round-button" id="swap-button" type="button" aria-label="Swap">↔</button>
-            <button class="round-button" id="keyboard-button" type="button" aria-label="Keyboard">⌨</button>
-            <button class="round-button" id="delete-all-button" type="button" aria-label="Delete">⌫</button>
+            <div class="toolbar-icon-actions">
+                <button class="round-button" id="search-button" type="button" aria-label="Search cards" title="Search cards (Ctrl + F)" aria-controls="search-panel" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg></button>
+                <button class="round-button" id="swap-button" type="button" aria-label="Swap terms and definitions" title="Swap terms and definitions"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16m-4-4 4 4-4 4M20 17H4m4-4-4 4 4 4"/></svg></button>
+                <button class="round-button" id="keyboard-button" type="button" aria-label="Keyboard shortcuts" title="Keyboard shortcuts"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 15h10"/></svg></button>
+                <button class="round-button" id="delete-all-button" type="button" aria-label="Delete all cards" title="Delete all cards"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
+            </div>
         </div>
     </section>
 
@@ -82,24 +75,25 @@
 
     <section class="editor-bottom-actions" aria-label="Set actions">
         <div class="add-card-actions">
-            <button class="add-card-button" id="add-card-button" type="button">Add a card</button>
-            <button class="add-card-button add-by-ai-button" id="add-by-ai-button" type="button">Add by AI</button>
+            <button class="add-card-button" id="add-card-button" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add a card</button>
+            <button class="add-card-button add-by-ai-button" id="add-by-ai-button" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5ZM20 2v4M18 4h4"/></svg>Add with AI</button>
         </div>
-        <div class="bottom-create-actions">
-            <button class="secondary-create-button" data-create-action="create" type="button">Create</button>
-            <button class="primary-create-button" data-create-action="practice" type="button">Create and practice</button>
-        </div>
+        <div class="editor-publish-bar"><div><p>A little effort. A lasting discovery.</p><span>Save your set, or jump straight into practice.</span></div><div class="bottom-create-actions">
+            <button class="secondary-create-button" id="create-button" type="button">Save set</button>
+            <button class="primary-create-button" id="create-practice-button" type="button">Save and practice<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></button>
+        </div></div>
+        <div class="editor-footer"><span>Your draft is kept in this browser as you edit.</span><span>Little by little, word by word.</span></div>
     </section>
 </main>
 
-<dialog class="import-dialog" id="import-dialog">
+<dialog class="import-dialog" id="import-dialog" aria-labelledby="import-heading">
     <form method="dialog">
         <div class="dialog-header">
-            <h2>Import cards</h2>
+            <h2 id="import-heading">A head start for your set.</h2>
             <button type="button" id="close-import" aria-label="Close">×</button>
         </div>
         <p>Paste one card per line. Separate term and definition with a tab, comma, semicolon, dash, or equals sign.</p>
-        <textarea id="import-text" rows="9" placeholder="accomplish - выполнять, достигать&#10;encourage - поощрять"></textarea>
+        <label class="visually-hidden" for="import-text">Cards to import</label><textarea id="import-text" rows="9" placeholder="accomplish - выполнять, достигать&#10;encourage - поощрять"></textarea>
         <div class="dialog-actions">
             <button class="secondary-button" type="button" id="cancel-import">Cancel</button>
             <button class="primary-button" type="button" id="apply-import">Import cards</button>
@@ -107,14 +101,14 @@
     </form>
 </dialog>
 
-<dialog class="import-dialog" id="keyboard-dialog">
+<dialog class="import-dialog" id="keyboard-dialog" aria-labelledby="keyboard-heading">
     <form method="dialog">
         <div class="dialog-header">
-            <h2>Keyboard shortcuts</h2>
+            <h2 id="keyboard-heading">A few handy shortcuts.</h2>
             <button type="button" id="close-keyboard" aria-label="Close">×</button>
         </div>
         <div class="shortcut-list">
-            <p><strong>Ctrl + Enter</strong><span>Save draft</span></p>
+            <p><strong>Ctrl + Enter</strong><span>Save set</span></p>
             <p><strong>Ctrl + I</strong><span>Open import</span></p>
             <p><strong>Ctrl + F</strong><span>Search cards</span></p>
             <p><strong>Ctrl + Shift + S</strong><span>Swap terms and definitions</span></p>
@@ -122,14 +116,14 @@
     </form>
 </dialog>
 
-<dialog class="import-dialog" id="add-ai-dialog">
+<dialog class="import-dialog" id="add-ai-dialog" aria-labelledby="ai-heading">
     <form method="dialog">
         <div class="dialog-header">
-            <h2>Add cards by AI</h2>
+            <h2 id="ai-heading">A little help from AI.</h2>
             <button type="button" id="close-add-ai" aria-label="Close">×</button>
         </div>
         <p id="add-ai-language-help">Paste any English text. DeepSeek will find useful words and add new flashcards to this set.</p>
-        <textarea id="add-ai-text" rows="9" placeholder="Paste text here..."></textarea>
+        <label class="visually-hidden" for="add-ai-text">Text for AI flashcards</label><textarea id="add-ai-text" rows="9" placeholder="Paste something you’d love to learn from…"></textarea>
         <div class="dialog-actions">
             <button class="secondary-button" type="button" id="cancel-add-ai">Cancel</button>
             <button class="primary-button" type="button" id="apply-add-ai">Add cards</button>
