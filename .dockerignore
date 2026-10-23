@@ -1,0 +1,10 @@
+.git
+.env
+.env.*
+node_modules
+target
+artifacts
+test-results
+playwright-report
+knowt.com
+*.log

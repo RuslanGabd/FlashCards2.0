@@ -28,11 +28,11 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/*.html")
-                .addResourceLocations(FRONTEND_LOCATION);
+                .addResourceLocations(FRONTEND_LOCATION, "classpath:/static/");
         registry.addResourceHandler("/css/**")
-                .addResourceLocations(FRONTEND_CSS_LOCATION);
+                .addResourceLocations(FRONTEND_CSS_LOCATION, "classpath:/static/css/");
         registry.addResourceHandler("/js/**")
-                .addResourceLocations(FRONTEND_JS_LOCATION);
+                .addResourceLocations(FRONTEND_JS_LOCATION, "classpath:/static/js/");
     }
 
     @Override

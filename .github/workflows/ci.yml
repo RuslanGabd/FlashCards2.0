@@ -37,6 +37,8 @@ jobs:
         run: python3 scripts/check.py postgres
       - name: Verify browser workflows against a fresh PostgreSQL database
         run: python3 scripts/check.py e2e
+      - name: Build the deployable application image
+        run: docker build -t words-up:ci .
       - name: Upload failure diagnostics
         if: failure()
         uses: actions/upload-artifact@v4

@@ -42,13 +42,7 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-### React build (if you want to exclude production builds) ###
-# Remove this line if you want to include build files
-# /build
 
-### Package lock files (optional) ###
-# package-lock.json
-# yarn.lock
 # Local secrets and generated artifacts
 .env
 .env.*
@@ -59,3 +53,6 @@ coverage/
 *.log
 
 artifacts/
+
+__pycache__/
+*.pyc
