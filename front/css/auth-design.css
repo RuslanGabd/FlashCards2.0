@@ -72,7 +72,10 @@
 .auth-form button { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 51px; margin-top: 4px; padding: 13px 20px; border: 1px solid var(--auth-green); background: var(--auth-green); color: #fff; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; transition: background .18s, transform .18s; }
 .auth-form button:hover { background: #173c2e; transform: translateY(-1px); }
 .auth-form button:active { transform: translateY(0); }
-.auth-message { font-size: 12px; line-height: 1.6; margin-top: 12px; overflow-wrap: anywhere; }
+.auth-message { font-size: 12px; line-height: 1.6; margin-top: 12px; overflow-wrap: anywhere; color: var(--auth-green); }
+.auth-message.is-error { color: #973c30; background: #fff1eb; border: 1px solid #edc8b9; border-radius: 8px; padding: 12px 14px; }
+.auth-field input[aria-invalid="true"] { border-color: #b96550; }
+.auth-form button:disabled { opacity: .65; cursor: wait; transform: none; }
 .auth-message:empty { display: none; }
 .auth-switch { padding-top: 25px; margin-top: 27px; border-top: 1px solid var(--auth-border); font-size: 12px; color: var(--auth-muted); }
 .auth-switch a { color: var(--auth-green); font-weight: 650; white-space: nowrap; }

@@ -38,15 +38,15 @@
             <form id="login-form" class="auth-form">
                 <div class="auth-field">
                     <label for="username">Username or email</label>
-                    <input id="username" name="username" type="text" autocomplete="username" placeholder="Enter your username or email" required />
+                    <input id="username" name="username" type="text" autocomplete="username" placeholder="Enter your username or email" aria-describedby="auth-message" required />
                 </div>
                 <div class="auth-field">
                     <label for="password">Password</label>
-                    <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required />
+                    <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" aria-describedby="auth-message" required />
                 </div>
                 <button type="submit">Log in <svg class="auth-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12" /></svg></button>
             </form>
-            <p id="auth-message" class="auth-message" role="status" aria-live="polite"></p>
+            <p id="auth-message" class="auth-message" role="alert" aria-live="assertive" aria-atomic="true"></p>
             <p class="auth-switch">New to Words Up? <a href="signup.html">Create an account <svg class="auth-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12" /></svg></a></p>
         </div>
         <p class="auth-panel-footer">A fresh start, one flashcard at a time.</p>
