@@ -82,7 +82,7 @@
             <button class="secondary-create-button" id="create-button" type="button">Save set</button>
             <button class="primary-create-button" id="create-practice-button" type="button">Save and practice<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></button>
         </div></div>
-        <div class="editor-footer"><span>Your draft is kept in this browser as you edit.</span><span>Little by little, word by word.</span></div>
+        <div class="editor-footer"><span id="save-status" role="status" aria-live="polite">Your draft is kept in this browser as you edit.</span><span>Little by little, word by word.</span></div>
     </section>
 </main>
 
@@ -133,6 +133,10 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
+<script src="js/app-client.js"></script>
+<script src="js/draft-store.js"></script>
+<script src="js/app-images.js"></script>
 <script src="js/edit-set.js"></script>
+<script src="js/study-navigation.js"></script>
 </body>
 </html>

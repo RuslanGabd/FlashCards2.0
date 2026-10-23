@@ -38,20 +38,12 @@ public class FlashcardSetController {
         this.userService = userService;
     }
 
-    /** GET /api/sets/public → List of all public sets */
-//    @GetMapping("/public")
-//    public ResponseEntity<List<FlashcardSet>> getPublicSets() {
-//        List<FlashcardSet> sets = flashcardSetService.getAllPublicSets();
-//        return ResponseEntity.ok(sets);
-//    }
-
-
     @GetMapping("/public")
     public ResponseEntity<List<FlashcardSetDto>> getPublicSets() {
         List<FlashcardSet> sets = flashcardSetService.getAllPublicSets();
 
         List<FlashcardSetDto> dtoList = sets.stream()
-                .map(FlashcardSetMapper::toDto)
+                .map(FlashcardSetMapper::toSummaryDto)
                 .toList();
 
         return ResponseEntity.ok(dtoList);
@@ -62,7 +54,7 @@ public class FlashcardSetController {
         User owner = userService.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         List<FlashcardSetDto> dtoList = flashcardSetService.getSetsByOwner(owner).stream()
-                .map(FlashcardSetMapper::toDto)
+                .map(FlashcardSetMapper::toSummaryDto)
                 .toList();
 
         return ResponseEntity.ok(dtoList);
@@ -105,7 +97,7 @@ public class FlashcardSetController {
         List<FlashcardSet> sets = flashcardSetService.getSetsByOwner(owner);
         boolean owns = viewer != null && username.equals(viewer.getUsername());
         return ResponseEntity.ok(sets.stream().filter(set -> owns || set.isPublic())
-                .map(FlashcardSetMapper::toDto).toList());
+                .map(FlashcardSetMapper::toSummaryDto).toList());
     }
 
     /** POST /api/sets → Create a new set.
@@ -119,11 +111,8 @@ public class FlashcardSetController {
         User owner = userService.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        FlashcardSet set = new FlashcardSet();
-        applyRequest(set, request);
-        set.setOwner(owner);
+        FlashcardSet saved = flashcardSetService.create(owner, request);
 
-        FlashcardSet saved = flashcardSetService.save(set);
         return ResponseEntity.ok(FlashcardSetMapper.toDto(saved));
     }
 
@@ -131,17 +120,8 @@ public class FlashcardSetController {
     public ResponseEntity<?> updateSet(@PathVariable @Positive Long id,
                                        @Valid @RequestBody FlashcardSetRequest request,
                                        @AuthenticationPrincipal UserDetails userDetails) {
-        FlashcardSet existingSet = flashcardSetService.getById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Flashcard set not found"));
+        FlashcardSet saved = flashcardSetService.update(id, userDetails.getUsername(), request);
 
-        String username = userDetails.getUsername();
-        if (existingSet.getOwner() == null || !username.equals(existingSet.getOwner().getUsername())) {
-            throw new AccessDeniedException("You can edit only your own sets");
-        }
-
-        applyRequest(existingSet, request);
-
-        FlashcardSet saved = flashcardSetService.save(existingSet);
         return ResponseEntity.ok(FlashcardSetMapper.toDto(saved));
     }
 
@@ -160,49 +140,4 @@ public class FlashcardSetController {
         return ResponseEntity.noContent().build();
     }
 
-    private void applyRequest(FlashcardSet set, FlashcardSetRequest request) {
-        set.setTitle(request.title());
-        set.setDescription(request.description());
-        set.setPublic(request.publicSet());
-        if (request.language() != null || set.getLanguage() == null || set.getLanguage().isBlank()) {
-            set.setLanguage(normalizeLanguage(request.language()));
-        }
-
-        if (request.cards() == null) {
-            set.getCards().clear();
-            return;
-        }
-
-        Map<String, Flashcard> existingByClientId = new HashMap<>();
-        set.getCards().stream()
-                .filter(card -> card.getClientId() != null && !card.getClientId().isBlank())
-                .forEach(card -> existingByClientId.put(card.getClientId(), card));
-
-        Set<Flashcard> retainedCards = new HashSet<>();
-        Set<String> requestClientIds = new HashSet<>();
-        for (FlashcardRequest cardRequest : request.cards()) {
-            String clientId = cardRequest.clientId() == null
-                    ? UUID.randomUUID().toString()
-                    : cardRequest.clientId();
-            if (!requestClientIds.add(clientId)) {
-                throw new IllegalArgumentException("Duplicate card clientId");
-            }
-
-            Flashcard card = existingByClientId.getOrDefault(clientId, new Flashcard());
-            card.setClientId(clientId);
-            card.setTerm(cardRequest.term());
-            card.setDefinition(cardRequest.definition());
-            card.setExampleSentence(cardRequest.exampleSentence());
-            card.setSet(set);
-            retainedCards.add(card);
-            if (card.getId() == null) {
-                set.getCards().add(card);
-            }
-        }
-        set.getCards().removeIf(card -> !retainedCards.contains(card));
-    }
-
-    private String normalizeLanguage(String language) {
-        return "fr".equalsIgnoreCase(language) ? "fr" : "en";
-    }
 }

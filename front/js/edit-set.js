@@ -2,7 +2,7 @@ const STORAGE_KEY = "words-up-editor-draft";
 const LOCAL_SETS_KEY = "words-up-local-sets";
 const CURRENT_LOCAL_SET_ID_KEY = "words-up-current-local-set-id";
 const CURRENT_REMOTE_SET_ID_KEY = "words-up-current-remote-set-id";
-const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8085" : "";
+const API_BASE_URL = AppClient.baseURL;
 const DICTIONARY_LOOKUP_URL = `${API_BASE_URL}/api/dictionary/lookup`;
 const AI_CREATE_SET_URL = `${API_BASE_URL}/api/ai/create-set`;
 const AI_EXAMPLE_URL = `${API_BASE_URL}/api/ai/example`;
@@ -80,12 +80,7 @@ renderDiagram();
 renderCards();
 loadRequestedSetForEditing();
 
-doneButton.addEventListener("click", async () => {
-    saveDraft();
-    const savedSet = await saveSet();
-    acceptCurrentDuplicateTerms();
-    showToast(savedSet.remote ? "Set saved to your account" : "Set saved locally");
-});
+doneButton.addEventListener("click", () => performSave(false));
 
 createButton.addEventListener("click", () => {
     handleCreate();
@@ -211,18 +206,11 @@ diagramButton.addEventListener("click", () => {
     diagramInput.click();
 });
 
-diagramInput.addEventListener("change", () => {
+diagramInput.addEventListener('change', async () => {
     const file = diagramInput.files?.[0];
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.addEventListener("load", () => {
-        diagram = { name: file.name, src: reader.result };
-        saveDraft();
-        renderDiagram();
-        showToast("Diagram added");
-    });
-    reader.readAsDataURL(file);
+    try { diagram = {name: file.name.slice(0, 255), src: await AppImages.read(file)}; saveDraft(); renderDiagram(); showToast('Diagram added'); }
+    catch (error) { showToast(error.message); }
 });
 
 suggestionsToggle.addEventListener("change", () => {
@@ -479,22 +467,37 @@ function handleCardAction(action, index) {
     }
 }
 
-async function handleCreate() {
-    saveDraft();
-    const savedSet = await saveSet();
-    acceptCurrentDuplicateTerms();
-    showToast(savedSet.remote ? "Set saved to your account" : "Set saved locally");
+async function handleCreate() { return performSave(false); }
+async function handlePracticeCreate() { return performSave(true); }
+let saving = false;
+async function performSave(practice) {
+    if (saving) return;
+    saving = true;
+    const buttons = [doneButton, createButton, createPracticeButton];
+    buttons.forEach(button => button.disabled = true);
+    try {
+        const complete = cards.filter(card => card.term.trim() || card.definition.trim());
+        if (!complete.length || complete.some(card => !card.term.trim() || !card.definition.trim()))
+            throw new Error('Add at least one card with both a term and a definition.');
+        const saved = await saveSet();
+        acceptCurrentDuplicateTerms();
+        setSaveStatus(saved.remote ? 'Saved to your account.' : 'Saved in this browser only. Log in to sync between devices.');
+        showToast(saved.remote ? 'Set saved to your account' : 'Set saved in this browser');
+        const query = `${saved.remote ? 'setId' : 'localSetId'}=${encodeURIComponent(saved.id)}`;
+        history.replaceState(null, '', `edit-set.html?${query}`);
+        if (practice) window.location.href = `flashcards.html?${query}`;
+    } catch (error) {
+        setSaveStatus(`Not saved${getAuthToken() ? ' online' : ''}. ${error.message}`, true);
+        showToast(error.message);
+    } finally {
+        saving = false;
+        buttons.forEach(button => button.disabled = false);
+    }
 }
-
-async function handlePracticeCreate() {
-    saveDraft();
-    const savedSet = await saveSet();
-    acceptCurrentDuplicateTerms();
-    showToast("Set saved. Opening practice");
-    const targetUrl = savedSet.remote
-        ? `flashcards.html?setId=${encodeURIComponent(savedSet.id)}`
-        : `flashcards.html?localSetId=${encodeURIComponent(savedSet.id)}`;
-    window.location.href = targetUrl;
+function setSaveStatus(message, isError = false) {
+    const status = document.getElementById('save-status');
+    status.textContent = message;
+    status.classList.toggle('save-error', isError);
 }
 
 async function generateCardsByAi(text) {
@@ -608,18 +611,11 @@ function chooseCardImage(index) {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
-    input.addEventListener("change", () => {
+    input.addEventListener('change', async () => {
         const file = input.files?.[0];
         if (!file) return;
-
-        const reader = new FileReader();
-        reader.addEventListener("load", () => {
-            cards[index].image = reader.result;
-            saveDraft();
-            renderCards();
-            showToast("Image added to card");
-        });
-        reader.readAsDataURL(file);
+        try { cards[index].image = await AppImages.read(file); saveDraft(); renderCards(); showToast('Image added to card'); }
+        catch (error) { showToast(error.message); }
     });
     input.click();
 }
@@ -1036,19 +1032,16 @@ function normalizeDuplicateTerm(value) {
 }
 
 function saveDraft() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ cards, diagram, meta: setMeta }));
+    try {
+        DraftStore.write(STORAGE_KEY, { cards, diagram, meta: setMeta });
+        setSaveStatus('Unsaved changes — draft kept in this browser.');
+        return true;
+    } catch (error) { setSaveStatus(error.message, true); return false; }
 }
 
 async function saveSet() {
-    if (getAuthToken()) {
-        try {
-            return await saveRemoteSet();
-        } catch (error) {
-            console.error("Remote set save failed, saving locally:", error);
-            showToast("Could not save online. Saved locally instead.");
-        }
-    }
-
+    saveDraft();
+    if (getAuthToken()) return saveRemoteSet();
     return { ...saveLocalSet(), remote: false };
 }
 
@@ -1057,20 +1050,10 @@ async function saveRemoteSet() {
     const url = remoteSetId
         ? `${API_BASE_URL}/api/sets/${encodeURIComponent(remoteSetId)}`
         : `${API_BASE_URL}/api/sets`;
-    const response = await fetch(url, {
-        method: remoteSetId ? "PUT" : "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${getAuthToken()}`,
-        },
+    const saved = await AppClient.request(url.replace(API_BASE_URL, ''), {
+        method: remoteSetId ? 'PUT' : 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify(createSetPayload()),
     });
-
-    if (!response.ok) {
-        throw new Error(await response.text());
-    }
-
-    const saved = await response.json();
     const sourceSetKey = localStorage.getItem(CURRENT_LOCAL_SET_ID_KEY) || "draft";
     localStorage.setItem(CURRENT_REMOTE_SET_ID_KEY, String(saved.id));
     await syncLocalAnnotations(saved.id, sourceSetKey);
@@ -1083,12 +1066,14 @@ function createSetPayload() {
         description: setMeta.description?.trim() || "",
         public: setMeta.isPublic !== false,
         language: getSetLanguage(),
+        diagram,
         cards: cards
             .map(card => ({
                 clientId: ensureCardClientId(card).clientId,
                 term: String(card.term || "").trim(),
                 definition: String(card.definition || "").trim(),
                 exampleSentence: String(card.exampleSentence || "").trim(),
+                image: card.image || "",
             }))
             .filter(card => card.term || card.definition),
     };
@@ -1183,6 +1168,7 @@ function saveLocalSet() {
         isPublic: setMeta.isPublic !== false,
         language: getSetLanguage(),
         cards: normalizedCards,
+        diagram,
         updatedAt: now,
         createdAt: existingIndex >= 0 ? sets[existingIndex].createdAt : now,
     };
@@ -1193,7 +1179,7 @@ function saveLocalSet() {
         sets.unshift(localSet);
     }
 
-    localStorage.setItem(LOCAL_SETS_KEY, JSON.stringify(sets));
+    DraftStore.write(LOCAL_SETS_KEY, sets);
     localStorage.setItem(CURRENT_LOCAL_SET_ID_KEY, localSet.id);
     return localSet;
 }
@@ -1211,32 +1197,7 @@ function createLocalSetId() {
     return `local-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function loadDraft() {
-    const params = new URLSearchParams(window.location.search);
-    if (params.has("new")) {
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem(CURRENT_LOCAL_SET_ID_KEY);
-        localStorage.removeItem(CURRENT_REMOTE_SET_ID_KEY);
-        return createEmptyDraft();
-    }
-
-    try {
-        const draft = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        const meta = {
-            title: draft?.meta?.title || "",
-            description: draft?.meta?.description || "",
-            isPublic: draft?.meta?.isPublic !== false,
-            language: draft?.meta?.language === "fr" ? "fr" : "en",
-        };
-        return {
-            cards: Array.isArray(draft?.cards) ? draft.cards : [...defaultCards],
-            diagram: draft?.diagram || null,
-            meta,
-        };
-    } catch {
-        return createStarterDraft();
-    }
-}
+function loadDraft() { return DraftStore.load(defaultCards); }
 
 async function loadRequestedSetForEditing() {
     const params = new URLSearchParams(window.location.search);
@@ -1274,7 +1235,7 @@ async function loadRequestedSetForEditing() {
                 term: String(card.term || ""),
                 definition: String(card.definition || ""),
                 exampleSentence: String(card.exampleSentence || ""),
-                image: "",
+                image: card.image || "",
             }))
             : [];
         setMeta = {
@@ -1283,7 +1244,7 @@ async function loadRequestedSetForEditing() {
             isPublic: remoteSet.public !== false,
             language: remoteSet.language === "fr" ? "fr" : "en",
         };
-        diagram = null;
+        diagram = remoteSet.diagram || null;
         localStorage.setItem(CURRENT_REMOTE_SET_ID_KEY, String(setId));
         localStorage.removeItem(CURRENT_LOCAL_SET_ID_KEY);
         setTitle.value = setMeta.title;
@@ -1314,7 +1275,7 @@ function loadLocalSetForEditing(localSetId) {
         isPublic: localSet.isPublic !== false,
         language: localSet.language === "fr" ? "fr" : "en",
     };
-    diagram = null;
+    diagram = localSet.diagram || null;
     localStorage.setItem(CURRENT_LOCAL_SET_ID_KEY, localSetId);
     localStorage.removeItem(CURRENT_REMOTE_SET_ID_KEY);
     setTitle.value = setMeta.title;

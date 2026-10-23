@@ -2,7 +2,7 @@ const EDITOR_DRAFT_KEY = "words-up-editor-draft";
 const CURRENT_LOCAL_SET_ID_KEY = "words-up-current-local-set-id";
 const CURRENT_REMOTE_SET_ID_KEY = "words-up-current-remote-set-id";
 const MY_TEXTS_KEY = "words-up-my-texts";
-const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8085" : "";
+const API_BASE_URL = AppClient.baseURL;
 const DICTIONARY_LOOKUP_URL = `${API_BASE_URL}/api/dictionary/lookup`;
 const PDF_TEXT_URL = `${API_BASE_URL}/api/documents/pdf-text`;
 const TRANSLATION_CHUNK_SIZE = 25;

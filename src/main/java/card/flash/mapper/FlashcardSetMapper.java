@@ -1,6 +1,7 @@
 package card.flash.mapper;
 
 import card.flash.dto.FlashcardSetDto;
+import card.flash.dto.DiagramDto;
 import card.flash.entity.FlashcardSet;
 
 public class FlashcardSetMapper {
@@ -10,6 +11,8 @@ public class FlashcardSetMapper {
         dto.setId(set.getId());
         dto.setTitle(set.getTitle());
         dto.setDescription(set.getDescription());
+        if (set.getDiagramData() != null && !set.getDiagramData().isEmpty())
+            dto.setDiagram(new DiagramDto(set.getDiagramName(), set.getDiagramData()));
         dto.setPublic(set.isPublic());
         dto.setLanguage(set.getLanguage());
 
@@ -17,6 +20,12 @@ public class FlashcardSetMapper {
             dto.setOwnerUsername(set.getOwner().getUsername());
         }
 
+        return dto;
+    }
+
+    public static FlashcardSetDto toSummaryDto(FlashcardSet set) {
+        FlashcardSetDto dto = toDto(set);
+        dto.setDiagram(null);
         return dto;
     }
 

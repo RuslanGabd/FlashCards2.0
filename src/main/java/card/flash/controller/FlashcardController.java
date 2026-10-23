@@ -7,6 +7,7 @@ import card.flash.entity.FlashcardSet;
 import card.flash.exception.ResourceNotFoundException;
 import card.flash.mapper.FlashcardMapper;
 import card.flash.service.FlashcardService;
+import card.flash.service.ImageData;
 import card.flash.service.FlashcardSetService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -59,6 +60,7 @@ public class FlashcardController {
         card.setTerm(request.term());
         card.setDefinition(request.definition());
         card.setExampleSentence(request.exampleSentence());
+        card.setImage(ImageData.validate(request.image()));
         card.setClientId(request.clientId() == null ? UUID.randomUUID().toString() : request.clientId());
         card.setSet(set);
 

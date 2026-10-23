@@ -1,4 +1,4 @@
-const STUDY_API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8085" : "";
+const STUDY_API_BASE_URL = AppClient.baseURL;
 const EDITOR_DRAFT_KEY = "words-up-editor-draft";
 const LOCAL_SETS_KEY = "words-up-local-sets";
 
@@ -102,6 +102,7 @@ function normalizeCards(cards) {
             term: String(card.term || "").trim(),
             definition: String(card.definition || "").trim(),
             exampleSentence: String(card.exampleSentence || "").trim(),
+            image: typeof card.image === "string" && /^data:image\/(png|jpeg|webp);base64,/.test(card.image) ? card.image : "",
             };
         })
         .filter(card => card.term && card.definition);

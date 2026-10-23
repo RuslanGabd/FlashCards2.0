@@ -29,6 +29,11 @@ public class FlashcardSet {
     private String title;
     private String description;
 
+    @Column(name = "diagram_name")
+    private String diagramName;
+    @Column(name = "diagram_data", columnDefinition = "TEXT")
+    private String diagramData;
+
     @Column(name = "is_public")
     private boolean isPublic;
 

@@ -219,3 +219,5 @@
     .editor-page .shortcut-list span { text-align: right; margin-left: auto; }
     .editor-page .toast { width: max-content; max-width: calc(100% - 32px); text-align: center; font-size: 12px; }
 }
+
+#save-status.save-error { color: #973c30; font-weight: 600; font-size: 11px; }

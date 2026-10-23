@@ -34,6 +34,9 @@ public class Flashcard {
 
     private String definition;
 
+    @Column(name = "image_data", columnDefinition = "TEXT")
+    private String image;
+
     @Column(name = "client_id", nullable = false, length = 36)
     private String clientId;
 

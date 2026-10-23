@@ -1,6 +1,6 @@
 const EDITOR_DRAFT_KEY = "words-up-editor-draft";
 const LOCAL_SETS_KEY = "words-up-local-sets";
-const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8085" : "";
+const API_BASE_URL = AppClient.baseURL;
 
 let librarySets = [];
 let remoteSetsManageable = false;

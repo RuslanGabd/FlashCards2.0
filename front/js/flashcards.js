@@ -17,7 +17,7 @@ let activePronunciationCancel = null;
 let studySetLanguage = "en";
 const favoriteTerms = new Set(JSON.parse(localStorage.getItem("words-up-favorite-terms") || "[]"));
 let flashSettings = JSON.parse(localStorage.getItem("words-up-flash-settings") || "{}");
-const API_BASE_URL = window.location.protocol === "file:" ? "http://localhost:8085" : "";
+const API_BASE_URL = AppClient.baseURL;
 const PRONUNCIATION_API_URL = `${API_BASE_URL}/api/pronunciation`;
 const DICTIONARY_LOOKUP_URL = `${API_BASE_URL}/api/dictionary/lookup`;
 const LEADING_ENGLISH_PREPOSITION = /^(?:aboard|about|above|across|after|against|along|alongside|amid|amidst|among|amongst|around|as|at|before|behind|below|beneath|beside|between|beyond|by|concerning|considering|despite|down|during|except|excluding|following|for|from|in|including|inside|into|like|minus|near|notwithstanding|of|off|on|onto|opposite|out|outside|over|past|per|plus|regarding|round|save|since|than|through|throughout|till|to|toward|towards|under|underneath|unlike|until|up|upon|versus|via|with|within|without|worth)\s+/i;
@@ -282,7 +282,7 @@ document.addEventListener("keydown", event => {
     if (event.key.toLowerCase() === "t") setFrontSide("term");
     if (event.key.toLowerCase() === "d") setFrontSide("definition");
     if (event.key.toLowerCase() === "s") favoriteButton.click();
-    if (event.key.toLowerCase() === "e") window.location.href = "edit-set.html";
+    if (event.key.toLowerCase() === "e") window.location.href = `edit-set.html${window.location.search}`;
 });
 
 function renderCurrentCard() {
@@ -291,6 +291,9 @@ function renderCurrentCard() {
 
     flashCard.classList.toggle("is-flipped", isBackSide);
     flashFace.textContent = getCardFace(card);
+    const image = document.getElementById('study-card-image');
+    image.hidden = !card.image;
+    if (card.image) image.src = card.image; else image.removeAttribute('src');
     flashHint.hidden = true;
     flashHint.textContent = "";
     hideTranscription();
