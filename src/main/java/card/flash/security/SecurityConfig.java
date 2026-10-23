@@ -78,12 +78,11 @@ public class SecurityConfig {
                 "http://localhost:*",
                 "http://127.0.0.1:*",
                 "https://mots.ink",
-                "https://www.mots.ink",
-                "https://*.ngrok-free.dev",
-                "https://*.ngrok.app"
+                "https://www.mots.ink"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("X-Has-More", "X-Total-Count", "Retry-After"));
         config.setAllowCredentials(true);
 
         var source = new UrlBasedCorsConfigurationSource();

@@ -3,6 +3,7 @@ const LOCAL_SETS_KEY = "words-up-local-sets";
 const API_BASE_URL = AppClient.baseURL;
 
 let librarySets = [];
+let collectionBrowser;
 let remoteSetsManageable = false;
 
 const searchInput = document.getElementById("sets-search");
@@ -102,28 +103,16 @@ function renderLocalSets() {
 }
 
 async function loadSavedSets() {
-    try {
-        const token = getAuthToken();
-        const response = await fetch(`${API_BASE_URL}${token ? "/api/sets/me" : "/api/sets/public"}`, {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        if (!response.ok) throw new Error("Failed to fetch sets");
-        remoteSetsManageable = Boolean(token);
-        librarySets = await response.json();
-        renderPublicSets(librarySets);
-    } catch (error) {
-        console.error("Error loading sets:", error);
-        savedSetsContainer.innerHTML = `
-            <article class="activity-item">
-                <div class="set-thumb">!</div>
-                <div>
-                    <p class="set-meta">Connection problem</p>
-                    <h3>Error loading sets</h3>
-                    <p class="set-description">We couldn’t load the sets. Please try again in a moment.</p>
-                </div>
-            </article>
-        `;
-    }
+    if (collectionBrowser) return collectionBrowser.reload();
+    collectionBrowser = CollectionBrowser.mount({
+        path: () => getAuthToken() ? '/api/sets/me' : '/api/sets/public',
+        input:searchInput, container:savedSetsContainer,
+        onData: sets => {
+            remoteSetsManageable = Boolean(getAuthToken());
+            librarySets = sets; renderPublicSets(sets);
+        },
+        onError: error => { savedSetsContainer.textContent = error.message; },
+    });
 }
 
 function renderPublicSets(sets) {
@@ -208,7 +197,7 @@ async function deleteRemoteSet(setId, button) {
         if (localStorage.getItem("words-up-current-remote-set-id") === String(setId)) {
             localStorage.removeItem("words-up-current-remote-set-id");
         }
-        renderPublicSets(librarySets);
+        await loadSavedSets();
     } catch (error) {
         console.error("Error deleting set:", error);
         button.disabled = false;

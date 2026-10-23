@@ -3,7 +3,7 @@
         constructor(message, status = 0) { super(message); this.status = status; }
     }
     const baseURL = window.location.protocol === 'file:' ? 'http://localhost:8080' : '';
-    async function request(path, { timeout = 20000, ...options } = {}) {
+    async function request(path, { timeout = 20000, withMeta = false, ...options } = {}) {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), timeout);
         const headers = new Headers(options.headers);
@@ -22,7 +22,8 @@
                 if (response.status === 429) message = 'Too many requests. Please wait a moment and try again.';
                 throw new ApiError(message, response.status);
             }
-            return response.status === 204 ? null : await response.json();
+            const data = response.status === 204 ? null : await response.json();
+            return withMeta ? {data, hasMore:response.headers.get('X-Has-More') === 'true'} : data;
         } catch (error) {
             if (error instanceof ApiError) throw error;
             throw new ApiError(error.name === 'AbortError' ? 'The request timed out. Please try again.' : 'Unable to connect. Please try again.');

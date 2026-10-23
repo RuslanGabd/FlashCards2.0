@@ -4,16 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Match - Words Up</title>
+    <meta name="theme-color" content="#244c3f" />
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+    <link rel="stylesheet" href="css/study-design.css" />
 </head>
-<body class="study-mode-page">
-<header class="study-mode-topbar">
-    <a class="brand" href="index.html">Words Up</a>
+<body class="study-mode-page latest-page learning-page">
+<header class="latest-topbar learning-header">
+    <a class="brand" href="index.html" aria-label="Words Up home"><span class="brand-mark" aria-hidden="true"><i></i><i></i></span>Words<span class="brand-light">Up</span><span class="brand-dot">.</span></a>
     <nav class="words-nav" aria-label="Match navigation">
         <a href="flashcards.html">Flashcards</a>
         <a href="practice.html">Practice</a>
         <a href="edit-set.html">Edit set</a>
     </nav>
+<nav class="account-actions" aria-label="Account"><a href="login.html" data-auth-guest>Log in</a><a href="signup.html" data-auth-guest>Sign up</a><a href="your-sets.html" data-auth-user hidden></a></nav>
 </header>
 
 <main class="study-mode-shell">
@@ -33,6 +37,7 @@
 </main>
 
 <script src="js/app-client.js"></script>
+<script src="js/auth-header.js"></script>
 <script src="js/study-data.js"></script>
 <script src="js/match.js"></script>
 <script src="js/study-navigation.js"></script>

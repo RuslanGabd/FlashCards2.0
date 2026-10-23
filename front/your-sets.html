@@ -14,7 +14,7 @@
     <a class="brand" href="index.html" aria-label="Words Up home"><span class="brand-mark" aria-hidden="true"><i></i><i></i></span>Words<span class="brand-light">Up</span><span class="brand-dot">.</span></a>
     <label class="top-search" aria-label="Search">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
-        <input id="sets-search" type="search" placeholder="Search your library…" aria-label="Search your study sets"/>
+        <input id="sets-search" type="search" maxlength="100" placeholder="Search your library…" aria-label="Search your study sets"/>
     </label>
     <nav class="top-actions" aria-label="Primary navigation">
         <a class="top-create" href="edit-set.html?new=1"><span aria-hidden="true">+</span> Create a set</a>
@@ -75,6 +75,7 @@
     </main>
 </div>
 
+<script src="js/collection-browser.js"></script>
 <script src="js/your-sets.js"></script>
 <script src="js/study-navigation.js"></script>
 </body>

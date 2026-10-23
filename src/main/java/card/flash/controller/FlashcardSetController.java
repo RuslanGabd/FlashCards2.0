@@ -20,6 +20,11 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.*;
@@ -39,25 +44,29 @@ public class FlashcardSetController {
     }
 
     @GetMapping("/public")
-    public ResponseEntity<List<FlashcardSetDto>> getPublicSets() {
-        List<FlashcardSet> sets = flashcardSetService.getAllPublicSets();
-
-        List<FlashcardSetDto> dtoList = sets.stream()
-                .map(FlashcardSetMapper::toSummaryDto)
-                .toList();
-
-        return ResponseEntity.ok(dtoList);
+    public ResponseEntity<List<FlashcardSetDto>> getPublicSets(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "24") @Min(1) @Max(100) int size,
+            @RequestParam(defaultValue = "") @Size(max = 100) String q) {
+        return pageResponse(flashcardSetService.searchPublic(q.trim(), pageRequest(page, size)));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<List<FlashcardSetDto>> getMySets(@AuthenticationPrincipal UserDetails userDetails) {
-        User owner = userService.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        List<FlashcardSetDto> dtoList = flashcardSetService.getSetsByOwner(owner).stream()
-                .map(FlashcardSetMapper::toSummaryDto)
-                .toList();
+    public ResponseEntity<List<FlashcardSetDto>> getMySets(@AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "24") @Min(1) @Max(100) int size,
+            @RequestParam(defaultValue = "") @Size(max = 100) String q) {
+        User owner = userService.findByUsername(userDetails.getUsername()).orElseThrow();
+        return pageResponse(flashcardSetService.searchOwner(owner, true, q.trim(), pageRequest(page, size)));
+    }
 
-        return ResponseEntity.ok(dtoList);
+    private PageRequest pageRequest(int page, int size) {
+        return PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+    }
+    private ResponseEntity<List<FlashcardSetDto>> pageResponse(Page<FlashcardSet> page) {
+        return ResponseEntity.ok().header("X-Has-More", String.valueOf(page.hasNext()))
+                .header("X-Total-Count", String.valueOf(page.getTotalElements()))
+                .body(page.map(FlashcardSetMapper::toSummaryDto).getContent());
     }
 
     @GetMapping("/{id}")
@@ -87,17 +96,17 @@ public class FlashcardSetController {
         return ResponseEntity.ok(FlashcardSetMapper.toDto(set));
     }
 
-    /** GET /api/sets/user/{username} → All sets owned by this username */
     @GetMapping("/user/{username}")
-    public ResponseEntity<?> getSetsByUser(
+    public ResponseEntity<List<FlashcardSetDto>> getSetsByUser(
             @PathVariable @Size(min = 3, max = 50) @Pattern(regexp = "[A-Za-z0-9._-]+") String username,
-            @AuthenticationPrincipal UserDetails viewer) {
+            @AuthenticationPrincipal UserDetails viewer,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "24") @Min(1) @Max(100) int size,
+            @RequestParam(defaultValue = "") @Size(max = 100) String q) {
         User owner = userService.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        List<FlashcardSet> sets = flashcardSetService.getSetsByOwner(owner);
         boolean owns = viewer != null && username.equals(viewer.getUsername());
-        return ResponseEntity.ok(sets.stream().filter(set -> owns || set.isPublic())
-                .map(FlashcardSetMapper::toSummaryDto).toList());
+        return pageResponse(flashcardSetService.searchOwner(owner, owns, q.trim(), pageRequest(page, size)));
     }
 
     /** POST /api/sets → Create a new set.

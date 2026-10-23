@@ -38,15 +38,15 @@
             <form id="signup-form" class="auth-form">
                 <div class="auth-field">
                     <label for="username">Username</label>
-                    <input id="username" name="username" type="text" autocomplete="username" placeholder="Choose a username" required />
+                    <input id="username" name="username" type="text" minlength="3" maxlength="50" pattern="[A-Za-z0-9._-]+" autocomplete="username" placeholder="Choose a username" required />
                 </div>
                 <div class="auth-field">
                     <label for="email">Email address</label>
-                    <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required />
+                    <input id="email" name="email" type="email" maxlength="100" autocomplete="email" placeholder="you@example.com" required />
                 </div>
                 <div class="auth-field">
                     <label for="password">Password</label>
-                    <input id="password" name="password" type="password" autocomplete="new-password" placeholder="Create a password" required />
+                    <input id="password" name="password" type="password" minlength="8" maxlength="72" autocomplete="new-password" placeholder="Create a password" required />
                 </div>
                 <button type="submit">Create account <svg class="auth-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M6 6h12v12" /></svg></button>
             </form>

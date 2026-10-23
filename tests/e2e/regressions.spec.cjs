@@ -1,6 +1,6 @@
 const {test,expect}=require('@playwright/test');
 const {randomUUID,randomBytes}=require('node:crypto');
-const username='e2e_'+randomUUID().slice(0,8), password=randomBytes(18).toString('hex');
+const username='e2e_'+randomUUID().replaceAll('-',''), password=randomBytes(18).toString('hex');
 let token;
 const card=(term='bonjour')=>({term,definition:'привет',exampleSentence:'Bonjour, mon ami.'});
 async function signedIn(page){await page.goto('/index.html');await page.evaluate(t=>localStorage.setItem('token',t),token);}
@@ -65,6 +65,54 @@ test('incorrect login is readable and successful login still works',async({page}
  await page.locator('#password').fill(password);await expect(page.locator('#auth-message')).toBeEmpty();
  await page.locator('button[type="submit"]').click();await expect(page).toHaveURL(/index.html/);
  await expect(page.locator('[data-auth-user]')).toHaveText(username);
+});
+test('collection browser loads additional pages and searches beyond the first page',async({page})=>{
+ await page.route('**/api/sets/public?*',route=>{
+  const url=new URL(route.request().url());
+  const q=url.searchParams.get('q'), next=url.searchParams.get('page')==='1';
+  const data=q?[{id:103,title:'SpecialOnly collection',language:'en'}]:next?[{id:103,title:'Third collection',language:'en'}]:[{id:101,title:'First collection',language:'en'},{id:102,title:'Second collection',language:'fr'}];
+  return route.fulfill({json:data,headers:{'X-Has-More':String(!q&&!next)}});
+ });
+ await page.goto('/index.html');await expect(page.locator('#sets-container .clickable-set')).toHaveCount(2);
+ await page.getByRole('button',{name:'Load more sets'}).click();await expect(page.locator('#sets-container .clickable-set')).toHaveCount(3);
+ await page.locator('#sets-search').fill('SpecialOnly');await expect(page.getByRole('link',{name:'SpecialOnly collection',exact:true})).toBeVisible();
+ await expect(page.locator('#sets-container .clickable-set')).toHaveCount(1);
+});
+test('suggestions remain usable after separating the editor state',async({page})=>{
+ await page.route('**/api/dictionary/lookup',r=>r.fulfill({json:{items:[{translation:'привет',alternatives:['привет']} ]}}));
+ await page.goto('/edit-set.html?new=1');
+ const term=page.locator('input[data-card-index="0"][data-field="term"]');
+ await term.fill('be');
+ await page.locator('[data-suggestion-list="term"][data-card-index="0"] button').filter({hasText:'beautiful'}).click();
+ await expect(term).toHaveValue('beautiful');
+ const definition=page.locator('input[data-card-index="0"][data-field="definition"]');
+ await definition.fill('при');
+ await page.locator('[data-suggestion-list="definition"][data-card-index="0"] button').filter({hasText:'привет'}).click();
+ await expect(definition).toHaveValue('привет');
+});
+test('elapsed and countdown timers retain their behavior in the shared theme',async({page})=>{
+ await page.clock.install();await page.goto('/index.html');
+ await page.evaluate(()=>localStorage.setItem('words-up-editor-draft',JSON.stringify({meta:{title:'Timer fixture'},cards:[{term:'timer-word',definition:'definition'}]})));
+ await page.goto('/flashcards.html');await expect(page.locator('#flash-card-face')).toHaveText('timer-word');
+ await page.locator('#countdown-minutes').fill('0');await page.locator('#countdown-seconds').fill('1');
+ await page.locator('#countdown-start-button').click();await page.clock.fastForward(1500);
+ await expect(page.locator('#countdown-display')).toHaveText('00:00');
+ await page.locator('#elapsed-start-button').click();await page.clock.fastForward(2000);
+ await expect(page.locator('#elapsed-time-display')).toHaveText('00:00:02');
+ await page.locator('#elapsed-reset-button').click();await expect(page.locator('#elapsed-time-display')).toHaveText('00:00:00');
+});
+test('all pages fit narrow, tablet and desktop screens without JavaScript errors',async({page})=>{
+ const errors=[];page.on('pageerror',error=>errors.push(error.message));
+ await signedIn(page);
+ for(const width of [320,768,1440]){
+  await page.setViewportSize({width,height:900});
+  for(const route of ['index','your-sets','edit-set','login','signup','flashcards','typing','practice','match','words-from-text']){
+   await page.goto('/'+route+'.html',{waitUntil:'networkidle'});
+   const size=await page.evaluate(()=>({viewport:innerWidth,content:document.documentElement.scrollWidth}));
+   expect(size.content,route+' at '+width).toBeLessThanOrEqual(size.viewport);
+  }
+ }
+ expect(errors).toEqual([]);
 });
 test('logout revokes server sessions and clears the browser token',async({page,request})=>{
  await signedIn(page);await page.reload();await page.getByRole('button',{name:'Log out',exact:true}).click();

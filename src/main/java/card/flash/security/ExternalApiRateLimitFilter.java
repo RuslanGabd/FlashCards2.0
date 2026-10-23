@@ -63,7 +63,7 @@ public class ExternalApiRateLimitFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         String prefix = matchedPrefix(request.getRequestURI());
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String principal = authentication != null && authentication.isAuthenticated()
+        String principal = !prefix.startsWith("/api/auth/") && authentication != null && authentication.isAuthenticated()
                 ? authentication.getName()
                 : request.getRemoteAddr();
         long now = clock.millis();

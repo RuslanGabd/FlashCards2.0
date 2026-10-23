@@ -29,15 +29,19 @@ public class YandexDictionaryService {
     private final ObjectMapper objectMapper;
     private final String apiKey;
     private final String lookupUrl;
+    private final Duration requestBudget;
 
     public YandexDictionaryService(
             ObjectMapper objectMapper,
             @Value("${yandex.dictionary.api-key:}") String apiKey,
-            @Value("${yandex.dictionary.lookup-url:https://dictionary.yandex.net/api/v1/dicservice.json/lookup}") String lookupUrl
+            @Value("${yandex.dictionary.lookup-url:https://dictionary.yandex.net/api/v1/dicservice.json/lookup}") String lookupUrl,
+            @Value("${yandex.dictionary.request-budget:PT15S}") Duration requestBudget
     ) {
         this.objectMapper = objectMapper;
         this.apiKey = apiKey;
         this.lookupUrl = lookupUrl;
+        this.requestBudget = requestBudget;
+        if (requestBudget.isZero() || requestBudget.isNegative()) throw new IllegalArgumentException("Dictionary budget must be positive");
     }
 
     public List<DictionaryWordDto> lookup(List<String> words, String lang) {
@@ -46,33 +50,29 @@ public class YandexDictionaryService {
         }
 
         String direction = normalizeDirection(lang);
-        return words.stream()
-                .filter(Objects::nonNull)
-                .map(String::trim)
-                .filter(word -> !word.isBlank())
-                .distinct()
-                .limit(300)
-                .map(word -> lookupWord(word, direction))
-                .toList();
+        List<String> normalized = words.stream().filter(Objects::nonNull).map(String::trim)
+                .filter(word -> !word.isBlank()).distinct().limit(50).toList();
+        long deadline = System.nanoTime() + requestBudget.toNanos();
+        List<DictionaryWordDto> results = new ArrayList<>();
+        for (String word : normalized) {
+            long remaining = deadline - System.nanoTime();
+            if (remaining <= 0) throw new IllegalStateException("Dictionary request timed out. Try fewer words.");
+            results.add(lookupWord(word, direction, Duration.ofNanos(remaining)));
+        }
+        return results;
     }
 
-    private DictionaryWordDto lookupWord(String word, String lang) {
+    private DictionaryWordDto lookupWord(String word, String lang, Duration remaining) {
         try {
-            var request = HttpRequest.newBuilder()
-                    .uri(buildLookupUri(word, lang))
-                    .timeout(Duration.ofSeconds(20))
-                    .GET()
-                    .build();
+            var request = HttpRequest.newBuilder().uri(buildLookupUri(word, lang))
+                    .timeout(remaining.compareTo(Duration.ofSeconds(5)) < 0 ? remaining : Duration.ofSeconds(5))
+                    .GET().build();
             var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() >= 400) {
-                return emptyResult(word);
-            }
+            if (response.statusCode() >= 400) throw new IllegalStateException("Dictionary service is unavailable. Please try again later.");
             return parseResponse(word, response.body());
         } catch (IOException | InterruptedException exception) {
-            if (exception instanceof InterruptedException) {
-                Thread.currentThread().interrupt();
-            }
-            return emptyResult(word);
+            if (exception instanceof InterruptedException) Thread.currentThread().interrupt();
+            throw new IllegalStateException("Dictionary request failed. Please try again.", exception);
         }
     }
 

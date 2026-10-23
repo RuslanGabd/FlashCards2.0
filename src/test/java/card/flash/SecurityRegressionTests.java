@@ -28,6 +28,14 @@ class SecurityRegressionTests {
     @Autowired PasswordEncoder encoder;
 
     @Test
+    void unrelatedOriginsAreNotGrantedCorsAccess() throws Exception {
+        mvc.perform(options("/api/auth/login").header("Origin", "https://untrusted.ngrok.app")
+                        .header("Access-Control-Request-Method", "POST"))
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+    }
+
+    @Test
     void passwordRecoveryNeverReturnsResetTokens() throws Exception {
         user("reset_owner");
         for (String endpoint : new String[]{"forgot-password", "reset-password"}) {

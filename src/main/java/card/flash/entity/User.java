@@ -14,6 +14,7 @@ public class User {
     private Long id;
     private String username;
     private String email;
+    @lombok.ToString.Exclude
     private String password;
 
     @Column(name = "session_version", nullable = false)

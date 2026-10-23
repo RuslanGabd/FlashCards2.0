@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    searchInput.addEventListener("input", renderSets);
+
 
     openAiCreateButton.addEventListener("click", () => {
         aiCreateDialog.showModal();
@@ -120,28 +120,11 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = "edit-set.html";
     });
 
-    fetch(`${API_BASE_URL}/api/sets/public`)
-        .then(response => {
-            if (!response.ok) throw new Error("Failed to fetch sets");
-            return response.json();
-        })
-        .then(sets => {
-            publicSets = sets;
-            renderSets();
-        })
-        .catch(error => {
-            console.error("Error loading sets:", error);
-            container.innerHTML = `
-                <article class="activity-item">
-                    <div class="set-thumb">!</div>
-                    <div>
-                        <p class="set-meta">Connection problem</p>
-                        <h3>Error loading sets</h3>
-                    <p class="set-description">We couldn’t load the sets. Please try again in a moment.</p>
-                    </div>
-                </article>
-            `;
-        });
+    CollectionBrowser.mount({
+        path: () => '/api/sets/public', input:searchInput, container,
+        onData: sets => { publicSets = sets; renderSets(); },
+        onError: error => { container.textContent = error.message; },
+    });
 });
 
 function startNewEditorDraft(draft) {

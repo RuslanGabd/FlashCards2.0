@@ -94,13 +94,19 @@ if (signupForm) {
             });
 
             if (!response.ok) {
-                throw new Error(await response.text());
+                throw new Error(response.status === 409
+                    ? 'That username or email is already in use. Try another or log in.'
+                    : response.status === 400
+                        ? 'Check your username, email and password. Use at least 8 characters for the password.'
+                        : response.status === 429
+                            ? 'Too many attempts. Please wait a moment and try again.'
+                            : 'Account creation is temporarily unavailable. Please try again later.');
             }
 
             showMessage("Account created. You can log in now.");
             window.location.href = "login.html";
         } catch (error) {
-            showMessage(error.message || "Signup failed.", true);
+            showMessage(error instanceof TypeError ? "Unable to connect. Check your internet connection and try again." : error.message || "Account creation failed. Please try again.", true);
         }
     });
 }

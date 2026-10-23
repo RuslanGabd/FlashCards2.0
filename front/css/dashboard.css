@@ -293,3 +293,13 @@
 .top-actions [data-logout], .account-actions [data-logout] { border: 1px solid #d8e1cd; border-radius: 7px; color: #4f6542; background: #fff; font: inherit; font-size: 11px; padding: 8px 11px; cursor: pointer; white-space: nowrap; }
 .top-actions [data-logout]:hover, .account-actions [data-logout]:hover { background: #eef3e5; }
 @media(max-width:620px) { .top-actions { gap: 8px; } .top-actions [data-auth-user] { max-width: min(100px,23vw); } }
+.load-more-button { display: block; margin: 16px auto 0; padding: 10px 18px; border: 1px solid #cbd8b9; border-radius: 8px; background: #eef3e5; color: #4d653d; font: inherit; font-size: 12px; cursor: pointer; }
+.load-more-button:disabled { opacity: .6; cursor: wait; }
+@media(max-width:380px) {
+ .latest-topbar { padding-left:16px; padding-right:16px; gap:14px 9px; }
+ .latest-topbar .brand { font-size:20px; }
+ .latest-topbar .brand-mark { margin-right:9px; width:28px; }
+ .top-actions { gap:6px; }
+ .top-actions [data-auth-user] { max-width:64px; padding:7px 9px; font-size:10px; }
+ .top-actions [data-logout] { padding:7px 8px; font-size:10px; }
+}

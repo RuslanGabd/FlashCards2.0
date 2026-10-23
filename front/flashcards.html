@@ -4,30 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Flashcards - Words Up</title>
+    <meta name="theme-color" content="#244c3f" />
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+    <link rel="stylesheet" href="css/study-design.css" />
 </head>
-<body class="flash-study-page">
+<body class="flash-study-page latest-page learning-page">
+<header class="latest-topbar learning-header"><a class="brand" href="index.html" aria-label="Words Up home"><span class="brand-mark" aria-hidden="true"><i></i><i></i></span>Words<span class="brand-light">Up</span><span class="brand-dot">.</span></a><nav class="words-nav" aria-label="Study navigation"><a href="your-sets.html">My library</a><a href="edit-set.html">Edit this set</a></nav><nav class="account-actions" aria-label="Account"><a href="login.html" data-auth-guest>Log in</a><a href="signup.html" data-auth-guest>Sign up</a><a href="your-sets.html" data-auth-user hidden></a></nav></header>
 <main class="flash-study-shell">
-    <nav class="flash-study-header" aria-label="Flashcard navigation">
-        <a class="flash-home-link" href="index.html" aria-label="Home" title="Home">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M3 11.5 12 4l9 7.5v8a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1z" />
-            </svg>
-        </a>
-    </nav>
     <section class="mode-grid" aria-label="Study modes">
-        <a class="mode-tile active" href="flashcards.html"><span aria-hidden="true">▣</span> Flashcards</a>
-        <a class="mode-tile" id="typing-mode-link" href="typing.html"><span aria-hidden="true">◌</span> Learn</a>
-        <a class="mode-tile" href="practice.html"><span aria-hidden="true">▤</span> Test</a>
-        <a class="mode-tile" href="match.html"><span aria-hidden="true">▦</span> Blocks</a>
-        <a class="mode-tile" href="practice.html"><span aria-hidden="true">◆</span> Blast</a>
-        <a class="mode-tile" href="match.html"><span aria-hidden="true">▰</span> Match</a>
+        <a class="mode-tile active" href="flashcards.html"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 2h8M8 10h8M8 14h5"/></svg> Flashcards</a>
+        <a class="mode-tile" id="typing-mode-link" href="typing.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M7 15l5-11 5 11M9 11h6"/></svg> Learn</a>
+        <a class="mode-tile" href="practice.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 5 5L20 6"/></svg> Test</a>
+        <a class="mode-tile" href="match.html"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg> Match</a>
     </section>
-
-    <div class="mode-dots" aria-hidden="true">
-        <span class="active"></span>
-        <span></span>
-    </div>
 
     <div class="flash-study-layout">
         <div class="flash-card-column">
@@ -228,7 +218,9 @@
 </dialog>
 
 <script src="js/app-client.js"></script>
+<script src="js/auth-header.js"></script>
 <script src="js/study-data.js"></script>
+<script src="js/study-timers.js"></script>
 <script src="js/flashcards.js"></script>
 <script src="js/study-navigation.js"></script>
 </body>
