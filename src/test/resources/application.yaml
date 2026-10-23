@@ -12,3 +12,8 @@ spring:
 
   flyway:
     enabled: false
+
+# Test-only signing material, not used by the application configuration.
+app:
+  jwt:
+    secret: dGVzdC1vbmx5LXNpZ25pbmcta2V5LWZvci1pc29sYXRlZC10ZXN0cy1vbmx5LTAxMjM0NTY3ODk=

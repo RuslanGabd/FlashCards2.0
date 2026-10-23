@@ -98,11 +98,14 @@ public class FlashcardSetController {
     /** GET /api/sets/user/{username} → All sets owned by this username */
     @GetMapping("/user/{username}")
     public ResponseEntity<?> getSetsByUser(
-            @PathVariable @Size(min = 3, max = 50) @Pattern(regexp = "[A-Za-z0-9._-]+") String username) {
+            @PathVariable @Size(min = 3, max = 50) @Pattern(regexp = "[A-Za-z0-9._-]+") String username,
+            @AuthenticationPrincipal UserDetails viewer) {
         User owner = userService.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         List<FlashcardSet> sets = flashcardSetService.getSetsByOwner(owner);
-        return ResponseEntity.ok(sets.stream().map(FlashcardSetMapper::toDto).toList());
+        boolean owns = viewer != null && username.equals(viewer.getUsername());
+        return ResponseEntity.ok(sets.stream().filter(set -> owns || set.isPublic())
+                .map(FlashcardSetMapper::toDto).toList());
     }
 
     /** POST /api/sets → Create a new set.

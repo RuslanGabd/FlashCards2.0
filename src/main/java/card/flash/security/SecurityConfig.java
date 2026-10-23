@@ -51,7 +51,10 @@ public class SecurityConfig {
                                 "/js/**",
                                 "/favicon.ico"
                         ).permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/logout").authenticated()
+                        .requestMatchers("/api/auth/signup", "/api/auth/login",
+                                "/api/auth/forgot-password", "/api/auth/reset-password").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/users/*").permitAll()
                         .requestMatchers("/api/sets/public").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/sets/*/study").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/flashcards/set/**").permitAll()
@@ -60,7 +63,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/annotations/**").authenticated()
                         .requestMatchers("/api/documents/**").authenticated()
                         .requestMatchers("/api/ai/**", "/api/dictionary/**", "/api/pronunciation/**").authenticated()
-                        .anyRequest().permitAll()
+                        .anyRequest().denyAll()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(externalApiRateLimitFilter, JwtFilter.class);

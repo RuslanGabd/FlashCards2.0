@@ -49,3 +49,11 @@ yarn-error.log*
 ### Package lock files (optional) ###
 # package-lock.json
 # yarn.lock
+# Local secrets and generated artifacts
+.env
+.env.*
+!.env.example
+playwright-report/
+test-results/
+coverage/
+*.log

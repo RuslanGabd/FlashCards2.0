@@ -1,6 +1,6 @@
 package card.flash.controller;
 
-import card.flash.dto.UserDto;
+import card.flash.dto.PublicUserDto;
 import card.flash.entity.User;
 import card.flash.exception.ResourceNotFoundException;
 import card.flash.service.UserService;
@@ -24,10 +24,10 @@ public class UserController {
     }
 
     @GetMapping("/{username}")
-    public UserDto getUserByUsername(
+    public PublicUserDto getUserByUsername(
             @PathVariable @Size(min = 3, max = 50) @Pattern(regexp = "[A-Za-z0-9._-]+") String username) {
         User user = userService.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        return UserDto.from(user);
+        return new PublicUserDto(user.getId(), user.getUsername());
     }
 }

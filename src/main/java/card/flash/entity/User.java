@@ -16,4 +16,7 @@ public class User {
     private String email;
     private String password;
 
+    @Column(name = "session_version", nullable = false)
+    private int sessionVersion;
+
 }

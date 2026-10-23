@@ -25,12 +25,16 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ExternalApiRateLimitFilter extends OncePerRequestFilter {
 
     private static final long WINDOW_MILLIS = 60_000;
-    private static final Map<String, Integer> LIMITS = Map.of(
-            "/api/ai/create-set", 10,
-            "/api/ai/example", 60,
-            "/api/documents", 10,
-            "/api/dictionary", 30,
-            "/api/pronunciation", 60
+    private static final Map<String, Integer> LIMITS = Map.ofEntries(
+            Map.entry("/api/auth/login", 20),
+            Map.entry("/api/auth/signup", 10),
+            Map.entry("/api/auth/forgot-password", 5),
+            Map.entry("/api/auth/reset-password", 5),
+            Map.entry("/api/ai/create-set", 10),
+            Map.entry("/api/ai/example", 60),
+            Map.entry("/api/documents", 10),
+            Map.entry("/api/dictionary", 30),
+            Map.entry("/api/pronunciation", 60)
     );
 
     private final ConcurrentHashMap<String, Window> windows = new ConcurrentHashMap<>();

@@ -7,7 +7,10 @@ import card.flash.exception.ConflictException;
 import card.flash.exception.ResourceNotFoundException;
 import card.flash.repository.UserRepository;
 import card.flash.security.JwtUtil;
-import card.flash.service.PasswordService;
+import card.flash.exception.ApiError;
+import java.time.Instant;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
@@ -26,17 +29,15 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    private final PasswordService passwordService;
 
     public AuthController(AuthenticationManager authenticationManager,
                           UserRepository userRepository,
                           PasswordEncoder passwordEncoder,
-                          JwtUtil jwtUtil, PasswordService passwordService) {
+                          JwtUtil jwtUtil) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
-        this.passwordService = passwordService;
     }
 
     @PostMapping("/signup")
@@ -75,16 +76,17 @@ public class AuthController {
         return ResponseEntity.ok(new AuthResponse(jwt));
     }
 
-    @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        String token = passwordService.createResetToken(request.username());
-        // For MVP return token in body; in prod email it.
-        return ResponseEntity.ok(Map.of("resetToken", token));
+    @PostMapping({"/forgot-password", "/reset-password"})
+    public ResponseEntity<ApiError> recoveryUnavailable(jakarta.servlet.http.HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ApiError(
+                Instant.now(), 503, "Service Unavailable",
+                "Password recovery is currently unavailable. Please contact support.",
+                request.getRequestURI(), Map.of()));
     }
 
-    @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        passwordService.resetPassword(request.token(), request.newPassword());
-        return ResponseEntity.ok("Password reset successful");
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@AuthenticationPrincipal UserDetails user) {
+        userRepository.revokeSessions(user.getUsername());
+        return ResponseEntity.noContent().build();
     }
 }

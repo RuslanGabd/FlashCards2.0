@@ -32,28 +32,19 @@ public class JwtFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
 
-        String username = null;
-        String token = null;
-
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
-            try {
-                username = jwtUtil.extractUsername(token);
-            } catch (RuntimeException ignored) {
-                filterChain.doFilter(request, response);
-                return;
-            }
-        }
-
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            if (jwtUtil.isTokenValid(token)) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
+        if (authHeader != null && authHeader.startsWith("Bearer ")
+                && SecurityContextHolder.getContext().getAuthentication() == null) {
+            jwtUtil.validatedUsername(authHeader.substring(7)).ifPresent(username -> {
+                try {
+                    UserDetails details = userDetailsService.loadUserByUsername(username);
+                    var authentication = new UsernamePasswordAuthenticationToken(
+                            details, null, details.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } catch (org.springframework.security.core.userdetails.UsernameNotFoundException ignored) {
+                    // Deleted accounts cannot authenticate with an old token.
+                }
+            });
         }
 
         filterChain.doFilter(request, response);
