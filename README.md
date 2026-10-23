@@ -6,7 +6,7 @@ A Java/Spring Boot application for studying English and French vocabulary with R
 
 [Set editor](docs/images/editor.png) · [Flashcard practice](docs/images/study.png). Screenshots use synthetic demonstration data.
 
-Demo: [mots.ink](https://mots.ink). The deployed version is managed separately from this repository; see [deployment](#deployment).
+Demo: [wordsup.eu](https://wordsup.eu). The deployed version is managed separately from this repository; see [deployment](#deployment).
 
 ## What works
 
@@ -130,7 +130,7 @@ List endpoints accept `page` (zero-based), `size` (1–100, default 24), and `q`
 
 1. Supply unique production `JWT_SECRET` and database credentials securely. Rotate previously published credentials; do not reuse local development secrets.
 2. Build and run the Docker application, or run the packaged JAR with the environment configured. The JAR contains the frontend.
-3. Terminate HTTPS at a trusted reverse proxy pointing to the application. CORS allows localhost development and `mots.ink`/`www.mots.ink`; review origins for another host. Authentication limits use the server-observed remote address; do not trust arbitrary forwarding headers.
+3. Terminate HTTPS at a trusted reverse proxy pointing to the application. CORS allows localhost development and `wordsup.eu`/`www.wordsup.eu`; review origins for another host. Authentication limits use the server-observed remote address; do not trust arbitrary forwarding headers.
 4. Back up PostgreSQL before upgrades, apply the new application/migrations, and verify `/api/sets/public` plus a real sign-in/save flow. Code pushes and environment configuration saves do not deploy the public site by themselves.
 
 Changing the JWT signing key revokes old sessions. An existing database upgrades through additive Flyway migrations; the unsafe password-reset endpoints remain disabled regardless of old reset records. Secrets previously present in Git must be revoked at their providers; deleting code does not revoke a credential.

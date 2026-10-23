@@ -15,4 +15,4 @@ Browser scenarios cover draft recovery, selected-set navigation, image/diagram p
 
 Container checks exercised packaged HTML/CSS/JS, signup/login, collection creation, public profile privacy, disabled password recovery and exposed pagination headers. Screenshots were captured from this container using synthetic example data. Test databases and containers were removed afterward; the development database was preserved.
 
-External paid providers, production secret rotation and deployment to mots.ink were not part of these local checks. See [security](SECURITY.md) for the required deployment actions and [architecture](ARCHITECTURE.md#limits) for design limits.
+External paid providers, production secret rotation and deployment to wordsup.eu were not part of these local checks. See [security](SECURITY.md) for the required deployment actions and [architecture](ARCHITECTURE.md#limits) for design limits.

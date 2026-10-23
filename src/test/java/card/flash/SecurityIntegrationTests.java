@@ -33,14 +33,16 @@ class SecurityIntegrationTests {
 
     @Test
     void productionDomainIsAllowedByCors() throws Exception {
-        mockMvc.perform(options("/api/auth/login")
-                        .header("Origin", "https://mots.ink")
-                        .header("Access-Control-Request-Method", "POST")
-                        .header("Access-Control-Request-Headers", "content-type"))
-                .andExpect(status().isOk())
-                .andExpect(header().string("Access-Control-Allow-Origin", "https://mots.ink"))
-                .andExpect(header().string("Access-Control-Allow-Methods",
-                        org.hamcrest.Matchers.containsString("POST")));
+        for (String origin : new String[]{"https://wordsup.eu", "https://www.wordsup.eu"}) {
+            mockMvc.perform(options("/api/auth/login")
+                            .header("Origin", origin)
+                            .header("Access-Control-Request-Method", "POST")
+                            .header("Access-Control-Request-Headers", "content-type"))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("Access-Control-Allow-Origin", origin))
+                    .andExpect(header().string("Access-Control-Allow-Methods",
+                            org.hamcrest.Matchers.containsString("POST")));
+        }
     }
 
     @Test
