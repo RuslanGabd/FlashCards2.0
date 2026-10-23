@@ -57,3 +57,5 @@ playwright-report/
 test-results/
 coverage/
 *.log
+
+artifacts/

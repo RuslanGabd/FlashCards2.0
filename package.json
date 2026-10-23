@@ -1,0 +1,11 @@
+{
+  "name": "words-up",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "test": "playwright test",
+    "test:unit": "node --test tests/frontend/*.test.cjs"
+  },
+  "devDependencies": { "@playwright/test": "1.62.1" },
+  "engines": { "node": ">=22" }
+}
