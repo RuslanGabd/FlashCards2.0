@@ -114,6 +114,18 @@ test('all pages fit narrow, tablet and desktop screens without JavaScript errors
  }
  expect(errors).toEqual([]);
 });
+test('editor reordering survives account save, reload and practice',async({page,request})=>{
+ const response=await request.post('/api/sets',{headers:{Authorization:'Bearer '+token},data:{title:'Ordered collection',public:true,language:'fr',cards:[card('bonjour'),card('merci')]}});
+ expect(response.status()).toBe(200);const {id}=await response.json();
+ await signedIn(page);await page.goto('/edit-set.html?setId='+id);
+ const first=page.locator('input[data-card-index="0"][data-field="term"]');
+ await expect(first).toHaveValue('bonjour');
+ await page.locator('[data-action="move-up"][data-index="1"]').click();
+ await expect(first).toHaveValue('merci');
+ await page.locator('#create-button').click();await expect(page.locator('#save-status')).toHaveText('Saved to your account.');
+ await page.reload();await expect(first).toHaveValue('merci');
+ await page.goto('/flashcards.html?setId='+id);await expect(page.locator('#flash-card-face')).toHaveText('merci');
+});
 test('logout revokes server sessions and clears the browser token',async({page,request})=>{
  await signedIn(page);await page.reload();await page.getByRole('button',{name:'Log out',exact:true}).click();
  await expect(page.locator('[data-auth-guest]').first()).toBeVisible();

@@ -34,6 +34,9 @@ public class Flashcard {
 
     private String definition;
 
+    @Column(name = "sort_position", nullable = false)
+    private int position;
+
     @Column(name = "image_data", columnDefinition = "TEXT")
     private String image;
 

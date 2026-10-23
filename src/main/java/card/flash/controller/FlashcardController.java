@@ -63,6 +63,7 @@ public class FlashcardController {
         card.setImage(ImageData.validate(request.image()));
         card.setClientId(request.clientId() == null ? UUID.randomUUID().toString() : request.clientId());
         card.setSet(set);
+        card.setPosition(set.getCards().stream().mapToInt(Flashcard::getPosition).max().orElse(-1) + 1);
 
         return FlashcardMapper.toDto(flashcardService.save(card));
     }

@@ -47,6 +47,7 @@ public class FlashcardSet {
 
     @Builder.Default
     @OneToMany(mappedBy = "set", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("position ASC, id ASC")
     private List<Flashcard> cards = new ArrayList<>();
 
     @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")

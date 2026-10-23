@@ -52,6 +52,30 @@ class ImagePersistenceTests {
                         .content(payload("Unsafe", "data:image/svg+xml;base64,PHN2Zz4=")))
                 .andExpect(status().isBadRequest());
     }
+    @Test void cardOrderSurvivesReloadReorderingAndAppendingWithoutReplacingIds() throws Exception {
+        String first = UUID.randomUUID().toString(), second = UUID.randomUUID().toString();
+        Map<String, Object> a = Map.of("clientId", first, "term", "first", "definition", "one");
+        Map<String, Object> b = Map.of("clientId", second, "term", "second", "definition", "two");
+        String body = mvc.perform(post("/api/sets").header("Authorization", bearer)
+                .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(
+                        Map.of("title", "Ordered cards", "public", false, "cards", List.of(a, b)))))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        long id = json.readTree(body).path("id").asLong();
+        String cards = mvc.perform(get("/api/flashcards/set/{id}", id).header("Authorization", bearer))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].term").value("first"))
+                .andReturn().getResponse().getContentAsString();
+        long firstId = json.readTree(cards).get(0).path("id").asLong();
+        mvc.perform(put("/api/sets/{id}", id).header("Authorization", bearer)
+                .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(
+                        Map.of("title", "Ordered cards", "public", false, "cards", List.of(b, a)))))
+                .andExpect(status().isOk());
+        mvc.perform(post("/api/flashcards/set/{id}", id).header("Authorization", bearer)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"term\":\"third\",\"definition\":\"three\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/flashcards/set/{id}", id).header("Authorization", bearer))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].term").value("second"))
+                .andExpect(jsonPath("$[1].id").value(firstId)).andExpect(jsonPath("$[2].term").value("third"));
+    }
     @Test void invalidUpdateDoesNotPartiallyOverwriteTheSet() throws Exception {
         String body = mvc.perform(post("/api/sets").header("Authorization", bearer)
                         .contentType(MediaType.APPLICATION_JSON).content(payload("Original", PNG)))

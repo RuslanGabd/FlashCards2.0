@@ -17,7 +17,7 @@ public class FlashcardService {
     }
 
     public List<Flashcard> findBySet(FlashcardSet set) {
-        return flashcardRepository.findBySet(set);
+        return flashcardRepository.findBySetOrderByPositionAscIdAsc(set);
     }
 
     public Optional<Flashcard> findById(Long id) {

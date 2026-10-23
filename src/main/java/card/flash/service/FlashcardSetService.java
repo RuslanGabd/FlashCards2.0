@@ -94,6 +94,7 @@ public class FlashcardSetService {
 
         Set<Flashcard> retainedCards = new HashSet<>();
         Set<String> requestClientIds = new HashSet<>();
+        int position = 0;
         for (FlashcardRequest cardRequest : request.cards()) {
             String clientId = cardRequest.clientId() == null
                     ? UUID.randomUUID().toString()
@@ -103,6 +104,7 @@ public class FlashcardSetService {
             }
 
             Flashcard card = existingByClientId.getOrDefault(clientId, new Flashcard());
+            card.setPosition(position++);
             card.setClientId(clientId);
             card.setTerm(cardRequest.term());
             card.setDefinition(cardRequest.definition());
