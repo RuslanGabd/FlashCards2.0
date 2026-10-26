@@ -49,7 +49,9 @@ public class SecurityConfig {
                                 "/*.html",
                                 "/css/**",
                                 "/js/**",
-                                "/favicon.ico"
+                                "/favicon.ico",
+                                "/favicon.svg",
+                                "/apple-touch-icon.png"
                         ).permitAll()
                         .requestMatchers("/api/auth/logout").authenticated()
                         .requestMatchers("/api/auth/signup", "/api/auth/login",

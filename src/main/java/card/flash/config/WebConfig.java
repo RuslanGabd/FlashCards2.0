@@ -29,6 +29,8 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/*.html")
                 .addResourceLocations(FRONTEND_LOCATION, "classpath:/static/");
+        registry.addResourceHandler("/favicon.ico", "/favicon.svg", "/apple-touch-icon.png")
+                .addResourceLocations(FRONTEND_LOCATION, "classpath:/static/");
         registry.addResourceHandler("/css/**")
                 .addResourceLocations(FRONTEND_CSS_LOCATION, "classpath:/static/css/");
         registry.addResourceHandler("/js/**")
