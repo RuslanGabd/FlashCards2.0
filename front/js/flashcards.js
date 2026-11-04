@@ -9,8 +9,8 @@ let pronunciationPlaybackToken = 0;
 let activePronunciationAudio = null;
 let activePronunciationCancel = null;
 let studySetLanguage = "en";
-const favoriteTerms = new Set(JSON.parse(localStorage.getItem("words-up-favorite-terms") || "[]"));
-let flashSettings = JSON.parse(localStorage.getItem("words-up-flash-settings") || "{}");
+const favoriteTerms = new Set(DraftStore.readArray('words-up-favorite-terms').filter(term => typeof term === 'string'));
+let flashSettings = readFlashSettings();
 const API_BASE_URL = AppClient.baseURL;
 const PRONUNCIATION_API_URL = `${API_BASE_URL}/api/pronunciation`;
 const DICTIONARY_LOOKUP_URL = `${API_BASE_URL}/api/dictionary/lookup`;
@@ -24,7 +24,7 @@ let annotationStrokes = [];
 let currentAnnotationStroke = null;
 let activeAnnotationTool = null;
 let annotationLoadToken = 0;
-let annotationLayerVisible = localStorage.getItem("words-up-annotation-layer-visible") !== "false";
+let annotationLayerVisible = AppClient.storage.getItem("words-up-annotation-layer-visible") !== "false";
 
 const flashCard = document.getElementById("flash-study-card");
 const flashFace = document.getElementById("flash-card-face");
@@ -134,7 +134,7 @@ favoriteButton.addEventListener("click", () => {
         favoriteTerms.add(term);
     }
 
-    localStorage.setItem("words-up-favorite-terms", JSON.stringify([...favoriteTerms]));
+    AppClient.storage.setItem("words-up-favorite-terms", JSON.stringify([...favoriteTerms]));
     renderFavoriteState();
     if (starredOnlyToggle.checked) {
         applyCardFilter();
@@ -286,7 +286,7 @@ function renderCurrentCard() {
     loadAnnotationForCurrentCard();
 
     if (trackProgressToggle.checked) {
-        localStorage.setItem("words-up-flash-progress", JSON.stringify({ currentIndex, total: cards.length }));
+        AppClient.storage.setItem("words-up-flash-progress", JSON.stringify({ currentIndex, total: cards.length }));
     }
 }
 
@@ -328,7 +328,7 @@ async function toggleCurrentCardTranscription() {
     const term = String(card?.term || "").trim();
     if (!term) return;
 
-    const authToken = localStorage.getItem("token") || "";
+    const authToken = AppClient.storage.getItem("token") || "";
     if (!authToken) {
         showTranscriptionMessage("Log in to view transcription");
         return;
@@ -499,7 +499,8 @@ function autoSpeakCurrentCard() {
 }
 
 function applySavedSettings() {
-    accentSelect.value = flashSettings.accent || localStorage.getItem("words-up-pronunciation-accent") || "us";
+    const accent = flashSettings.accent || AppClient.storage.getItem('words-up-pronunciation-accent');
+    accentSelect.value = ['us', 'uk'].includes(accent) ? accent : 'us';
     trackProgressToggle.checked = Boolean(flashSettings.trackProgress);
     settingsTrackProgress.checked = trackProgressToggle.checked;
     starredOnlyToggle.checked = Boolean(flashSettings.starredOnly);
@@ -510,6 +511,19 @@ function applySavedSettings() {
     russianTtsToggle.checked = flashSettings.russianTtsEnabled !== false;
     englishSpeedSelect.value = flashSettings.englishSpeed || "0.9";
     russianSpeedSelect.value = flashSettings.russianSpeed || "0.9";
+}
+
+function readFlashSettings() {
+    const saved = DraftStore.readObject('words-up-flash-settings'), settings = {};
+    for (const key of ['trackProgress', 'starredOnly', 'ttsEnabled', 'englishTtsEnabled', 'russianTtsEnabled']) {
+        if (typeof saved[key] === 'boolean') settings[key] = saved[key];
+    }
+    const choices = {accent:['us', 'uk'], frontSide:['term', 'definition'],
+        englishSpeed:['0.75', '0.9', '1.1'], russianSpeed:['0.75', '0.9', '1.1']};
+    for (const [key, values] of Object.entries(choices)) {
+        if (values.includes(saved[key])) settings[key] = saved[key];
+    }
+    return settings;
 }
 
 function syncSettingsPanel() {
@@ -530,8 +544,8 @@ function saveFlashSettings() {
         englishSpeed: englishSpeedSelect.value,
         russianSpeed: russianSpeedSelect.value
     };
-    localStorage.setItem("words-up-flash-settings", JSON.stringify(flashSettings));
-    localStorage.setItem("words-up-pronunciation-accent", accentSelect.value);
+    AppClient.storage.setItem("words-up-flash-settings", JSON.stringify(flashSettings));
+    AppClient.storage.setItem("words-up-pronunciation-accent", accentSelect.value);
 }
 
 async function speakCurrentCardSide(card, manualPlayback = false) {
@@ -685,7 +699,7 @@ async function getForvoAudioUrl(word, language, accent) {
             url.searchParams.set("accent", accent);
         }
         const response = await fetch(url.toString(), {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+            headers: { Authorization: `Bearer ${AppClient.storage.getItem("token") || ""}` },
         });
         if (!response.ok) {
             return null;
@@ -752,7 +766,7 @@ function initializeAnnotationTools() {
 
     annotationLayerToggle.addEventListener("click", () => {
         annotationLayerVisible = !annotationLayerVisible;
-        localStorage.setItem("words-up-annotation-layer-visible", String(annotationLayerVisible));
+        AppClient.storage.setItem("words-up-annotation-layer-visible", String(annotationLayerVisible));
         if (!annotationLayerVisible) setActiveAnnotationTool(null);
         updateAnnotationLayerState();
     });
@@ -761,7 +775,7 @@ function initializeAnnotationTools() {
         button.addEventListener("click", () => {
             if (!annotationLayerVisible) {
                 annotationLayerVisible = true;
-                localStorage.setItem("words-up-annotation-layer-visible", "true");
+                AppClient.storage.setItem("words-up-annotation-layer-visible", "true");
                 updateAnnotationLayerState();
             }
             setActiveAnnotationTool(button.dataset.annotationTool);
@@ -905,7 +919,7 @@ async function loadAnnotationForCurrentCard() {
     }
 
     let strokes = [];
-    const authToken = localStorage.getItem("token") || "";
+    const authToken = AppClient.storage.getItem("token") || "";
     if (card.id && authToken) {
         try {
             const response = await fetch(`${API_BASE_URL}/api/annotations/card/${encodeURIComponent(card.id)}`, {
@@ -944,7 +958,7 @@ function cacheAndScheduleAnnotationSave() {
 
 async function saveAnnotation(card, key, strokes) {
     const drawingData = JSON.stringify(strokes);
-    const authToken = localStorage.getItem("token") || "";
+    const authToken = AppClient.storage.getItem("token") || "";
     let savedInDatabase = false;
 
     if (card.id && authToken) {
@@ -963,24 +977,22 @@ async function saveAnnotation(card, key, strokes) {
         }
     }
 
-    if (!savedInDatabase) {
-        localStorage.setItem(getAnnotationLocalStorageKey(card), drawingData);
-    }
+    const savedLocally = savedInDatabase || AppClient.storage.setItem(getAnnotationLocalStorageKey(card), drawingData);
     annotationSaveTimers.delete(key);
     if (cards[currentIndex] && getAnnotationKey(cards[currentIndex]) === key) {
-        annotationSaveStatus.textContent = savedInDatabase ? "Saved" : "Saved on this device";
+        annotationSaveStatus.textContent = savedInDatabase ? "Saved" : savedLocally ? "Saved on this device" : "Not saved — browser storage is unavailable";
     }
 }
 
 function loadLocalAnnotation(card) {
     const primaryKey = getAnnotationLocalStorageKey(card);
-    let drawingData = localStorage.getItem(primaryKey);
+    let drawingData = AppClient.storage.getItem(primaryKey);
     if (drawingData === null && card?.legacyAnnotationKey) {
         const legacyKey = getAnnotationLocalStorageKey(card, card.legacyAnnotationKey);
-        drawingData = localStorage.getItem(legacyKey);
+        drawingData = AppClient.storage.getItem(legacyKey);
         if (drawingData !== null) {
-            localStorage.setItem(primaryKey, drawingData);
-            localStorage.removeItem(legacyKey);
+            AppClient.storage.setItem(primaryKey, drawingData);
+            AppClient.storage.removeItem(legacyKey);
         }
     }
     return parseAnnotationData(drawingData || "[]");

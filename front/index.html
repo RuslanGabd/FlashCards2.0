@@ -130,8 +130,11 @@
             <span>Text</span>
             <textarea id="ai-source-text" rows="10" placeholder="Paste text here..."></textarea>
         </label>
+        <p id="ai-generation-message" class="ai-generation-message" role="alert" hidden></p>
+        <p class="ai-local-explanation">Local extraction finds words without AI. Add any missing definitions in the editor.</p>
         <div class="dialog-actions">
             <button class="secondary-button" id="cancel-ai-create" type="button">Cancel</button>
+            <button class="secondary-button" id="extract-local-words" type="button">Extract words locally</button>
             <button class="primary-button" id="generate-ai-set" type="button">Generate cards</button>
         </div>
     </form>

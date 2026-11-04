@@ -19,3 +19,12 @@ test('invalid storage is recoverable and failed writes are reported',()=>{
  const full=store({},'http://example.test/edit-set.html',true);
  assert.throws(()=>full.api.write(full.api.key,{cards:[]}),/Browser storage is full/);
 });
+test('typed reads reject malformed preference shapes',()=>{
+ const s=store({array:'{}',object:'[]',broken:'invalid',valid:'["hello"]'});
+ assert.equal(s.api.readArray('array').length,0);assert.equal(s.api.readArray('broken').length,0);
+ assert.equal(JSON.stringify(s.api.readObject('object')),'{}');assert.equal(s.api.readArray('valid')[0],'hello');
+});
+test('saved draft context is independent of later legacy target changes',()=>{
+ const s=store({'words-up-editor-draft':JSON.stringify({cards:[],context:{remoteSetId:'11',localSetId:null}}),'words-up-current-remote-set-id':'22'});
+ assert.equal(s.api.load([]).context.remoteSetId,'11');
+});

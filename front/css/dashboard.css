@@ -18,6 +18,9 @@
 .latest-page :focus-visible { outline: 3px solid #81a65a; outline-offset: 4px; }
 .latest-page svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
 .latest-page .arrow-icon { width: 15px; height: 15px; stroke-width: 1.5; vertical-align: middle; }
+.ai-create-dialog .dialog-actions { flex-wrap: wrap; }
+.ai-generation-message { margin: 14px 0; padding: 12px; border: 1px solid #edc8b9; border-radius: 8px; background: #fff1eb; color: #973c30; }
+.ai-local-explanation { margin-top: 12px; color: #626f61; font-size: 12px; line-height: 1.6; }
 .hero-button .arrow-icon { width: 18px; height: 18px; }
 .art-card-back .arrow-icon { width: 23px; height: 23px; }
 .skip-link { position: fixed; top: -100px; left: 16px; z-index: 100; padding: 12px 20px; border-radius: 8px; background: #244c3f; color: white; }

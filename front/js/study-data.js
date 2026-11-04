@@ -12,7 +12,7 @@ async function loadStudySet() {
     }
 
     if (setId) {
-        const token = localStorage.getItem("token");
+        const token = AppClient.storage.getItem("token");
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
         const setRequest = fetchOptionalStudySetMetadata(setId, headers);
         const cardsResponse = await fetch(
@@ -58,11 +58,11 @@ async function fetchOptionalStudySetMetadata(setId, headers) {
 
 function loadLocalStudySet(localSetId) {
     try {
-        const sets = JSON.parse(localStorage.getItem(LOCAL_SETS_KEY));
+        const sets = JSON.parse(AppClient.storage.getItem(LOCAL_SETS_KEY));
         const set = Array.isArray(sets) ? sets.find(item => item.id === localSetId) : null;
         if (!set) return { title: "Local set", language: "en", cards: [] };
         if (ensureStudyCardClientIds(set.cards || [])) {
-            localStorage.setItem(LOCAL_SETS_KEY, JSON.stringify(sets));
+            AppClient.storage.setItem(LOCAL_SETS_KEY, JSON.stringify(sets));
         }
         return {
             title: set.title || "Local set",
@@ -76,9 +76,9 @@ function loadLocalStudySet(localSetId) {
 
 function loadDraftStudySet() {
     try {
-        const draft = JSON.parse(localStorage.getItem(EDITOR_DRAFT_KEY));
+        const draft = JSON.parse(AppClient.storage.getItem(EDITOR_DRAFT_KEY));
         if (draft && ensureStudyCardClientIds(draft.cards || [])) {
-            localStorage.setItem(EDITOR_DRAFT_KEY, JSON.stringify(draft));
+            AppClient.storage.setItem(EDITOR_DRAFT_KEY, JSON.stringify(draft));
         }
         return {
             title: draft?.meta?.title || "Local draft",

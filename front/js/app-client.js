@@ -3,11 +3,17 @@
         constructor(message, status = 0) { super(message); this.status = status; }
     }
     const baseURL = window.location.protocol === 'file:' ? 'http://localhost:8080' : '';
+    const storage = {
+        getItem(key) { try { return localStorage.getItem(key); } catch { return null; } },
+        setItem(key, value) { try { localStorage.setItem(key, value); return true; } catch { return false; } },
+        removeItem(key) { try { localStorage.removeItem(key); return true; } catch { return false; } },
+        keys() { try { return Object.keys(localStorage); } catch { return []; } },
+    };
     async function request(path, { timeout = 20000, withMeta = false, ...options } = {}) {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), timeout);
         const headers = new Headers(options.headers);
-        const token = localStorage.getItem('token');
+        const token = storage.getItem('token');
         if (token && !headers.has('Authorization')) headers.set('Authorization', `Bearer ${token}`);
         try {
             const response = await fetch(`${baseURL}${path}`, { ...options, headers, signal: controller.signal });
@@ -16,7 +22,7 @@
                 try { const body = await response.json(); if (typeof body.message === 'string') message = body.message; } catch { /* Keep a readable fallback for proxy errors. */ }
                 if (response.status === 401) {
                     message = 'Your session has expired. Log in again to save online.';
-                    localStorage.removeItem('token');
+                    storage.removeItem('token');
                     window.dispatchEvent(new Event('auth-changed'));
                 }
                 if (response.status === 429) message = 'Too many requests. Please wait a moment and try again.';
@@ -29,5 +35,5 @@
             throw new ApiError(error.name === 'AbortError' ? 'The request timed out. Please try again.' : 'Unable to connect. Please try again.');
         } finally { clearTimeout(timer); }
     }
-    window.AppClient = { baseURL, request, ApiError };
+    window.AppClient = { baseURL, request, ApiError, storage };
 })();

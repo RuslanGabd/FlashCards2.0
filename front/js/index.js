@@ -30,6 +30,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const closeAiCreate = document.getElementById("close-ai-create");
     const cancelAiCreate = document.getElementById("cancel-ai-create");
     const generateAiSet = document.getElementById("generate-ai-set");
+    const extractLocalWords = document.getElementById('extract-local-words');
+    const aiMessage = document.getElementById('ai-generation-message');
     const aiSetTitle = document.getElementById("ai-set-title");
     const aiSetLanguage = document.getElementById("ai-set-language");
     const aiSourceText = document.getElementById("ai-source-text");
@@ -78,6 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     openAiCreateButton.addEventListener("click", () => {
+        aiMessage.hidden = true;
         aiCreateDialog.showModal();
         aiSourceText.focus();
     });
@@ -95,29 +98,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
         generateAiSet.disabled = true;
         generateAiSet.textContent = "Generating...";
-
-        const language = aiSetLanguage.value === "fr" ? "fr" : "en";
-        const aiSet = await generateCardsByAi(aiSetTitle.value.trim(), text, language);
-        const cards = aiSet.cards.length ? aiSet.cards : generateCardsFromText(text, language);
-        if (!cards.length) {
-            showToast(`No ${language === "fr" ? "French" : "English"} words found`, toast);
+        aiMessage.hidden = true;
+        try {
+            const language = aiSetLanguage.value === "fr" ? "fr" : "en";
+            const aiSet = await generateCardsByAi(aiSetTitle.value.trim(), text, language);
+            if (!aiCreateDialog.open) return;
+            if (!aiSet.cards.length) throw new Error('No complete cards were generated');
+            startNewEditorDraft({
+                cards:aiSet.cards, diagram:null,
+                meta:{title:aiSet.title,description:aiSet.description,isPublic:true,language},
+            });
+            window.location.href = 'edit-set.html';
+        } catch (error) {
+            aiMessage.textContent = error.status === 401
+                ? 'Log in to generate cards with AI, or extract words locally and add definitions yourself.'
+                : error.status === 429
+                    ? 'Too many requests. Wait a moment or extract words locally.'
+                    : 'AI generation is unavailable right now. Try again or extract words locally and add definitions yourself.';
+            aiMessage.hidden = false;
+        } finally {
             generateAiSet.disabled = false;
             generateAiSet.textContent = "Generate cards";
-            return;
         }
+    });
 
-        startNewEditorDraft({
-            cards,
-            diagram: null,
-            meta: {
-                title: aiSet.title || aiSetTitle.value.trim() || "AI vocabulary set",
-                description: aiSet.description || `Generated from pasted text: ${cards.length} cards`,
-                isPublic: true,
-                language,
-            },
-        });
-
-        window.location.href = "edit-set.html";
+    extractLocalWords.addEventListener('click', () => {
+        const language = aiSetLanguage.value === 'fr' ? 'fr' : 'en';
+        const cards = generateCardsFromText(aiSourceText.value.trim(), language);
+        if (!cards.length) { aiMessage.textContent = 'Paste text containing words to extract first.'; aiMessage.hidden = false; return; }
+        try {
+            startNewEditorDraft({cards,diagram:null,meta:{
+                title:aiSetTitle.value.trim() || 'Vocabulary from text',
+                description:'Words extracted from your text. Add a definition to each card.',
+                isPublic:true,language,
+            }});
+            window.location.href = 'edit-set.html';
+        } catch {
+            aiMessage.textContent = 'The draft could not be stored in this browser. Free some browser storage and try again.';
+            aiMessage.hidden = false;
+        }
     });
 
     CollectionBrowser.mount({
@@ -128,9 +147,9 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function startNewEditorDraft(draft) {
+    localStorage.setItem(EDITOR_DRAFT_KEY, JSON.stringify(draft));
     localStorage.removeItem(CURRENT_LOCAL_SET_ID_KEY);
     localStorage.removeItem(CURRENT_REMOTE_SET_ID_KEY);
-    localStorage.setItem(EDITOR_DRAFT_KEY, JSON.stringify(draft));
 }
 
 document.addEventListener("click", event => {
@@ -142,34 +161,22 @@ document.addEventListener("click", event => {
 });
 
 async function generateCardsByAi(title, text, language) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/ai/create-set`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-            },
-            body: JSON.stringify({ title, text, language }),
-        });
-
-        if (!response.ok) throw new Error("AI generation failed");
-        const data = await response.json();
-        return {
-            title: data.title || title || "AI vocabulary set",
-            description: data.description || "",
-            cards: Array.isArray(data.cards)
-                ? data.cards.map(card => ({
-                    term: card.term || "",
-                    definition: card.definition || "",
-                    exampleSentence: card.exampleSentence || "",
-                    image: "",
-                })).filter(card => card.term && card.definition)
-                : [],
-        };
-    } catch (error) {
-        console.error("AI generation failed, using local fallback:", error);
-        return { title: title || "AI vocabulary set", description: "", cards: [] };
-    }
+    const data = await AppClient.request('/api/ai/create-set', {
+        method:'POST',timeout:65000,headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({title,text,language}),
+    });
+    return {
+        title: data.title || title || "AI vocabulary set",
+        description: data.description || "",
+        cards: Array.isArray(data.cards)
+            ? data.cards.map(card => ({
+                term: card.term || "",
+                definition: card.definition || "",
+                exampleSentence: card.exampleSentence || "",
+                image: "",
+            })).filter(card => card.term && card.definition)
+            : [],
+    };
 }
 
 function generateCardsFromText(text, language = "en") {
@@ -199,7 +206,7 @@ function generateCardsFromText(text, language = "en") {
         .slice(0, 30)
         .map(([term]) => ({
             term,
-            definition: language === "en" ? localTranslations[term] || "add translation" : "add translation",
+            definition: language === "en" ? localTranslations[term] || "" : "",
             image: "",
         }));
 }

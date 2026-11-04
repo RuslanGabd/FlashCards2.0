@@ -3,7 +3,7 @@
 
     function updateHeader() {
         clearTimeout(expiryTimer);
-        const token = localStorage.getItem("token");
+        const token = AppClient.storage.getItem("token");
         let username = "";
 
         if (token) {
@@ -23,7 +23,7 @@
                 username = claims.sub;
                 expiryTimer = setTimeout(updateHeader, Math.min(remaining, 2147483647));
             } catch {
-                localStorage.removeItem("token");
+                AppClient.storage.removeItem("token");
             }
         }
 
@@ -42,11 +42,11 @@
                     let offline = false;
                     try { await AppClient.request('/api/auth/logout', {method:'POST'}); }
                     catch (error) { offline = error.status !== 401; }
-                    localStorage.removeItem('token');
-                    if (localStorage.getItem('words-up-current-remote-set-id')) localStorage.removeItem('words-up-editor-draft');
-                    localStorage.removeItem('words-up-current-remote-set-id');
-                    for (const key of Object.keys(localStorage)) {
-                        if (key.startsWith('words-up-card-annotation:') && key.includes('remote-')) localStorage.removeItem(key);
+                    AppClient.storage.removeItem('token');
+                    if (AppClient.storage.getItem('words-up-current-remote-set-id')) AppClient.storage.removeItem('words-up-editor-draft');
+                    AppClient.storage.removeItem('words-up-current-remote-set-id');
+                    for (const key of AppClient.storage.keys()) {
+                        if (key.startsWith('words-up-card-annotation:') && key.includes('remote-')) AppClient.storage.removeItem(key);
                     }
                     if (offline) alert('Signed out on this device. Other sessions could not be ended because the server was unavailable.');
                     location.href = 'index.html';
