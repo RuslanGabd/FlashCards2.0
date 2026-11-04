@@ -7,7 +7,6 @@ import card.flash.entity.FlashcardSet;
 import card.flash.exception.ResourceNotFoundException;
 import card.flash.mapper.FlashcardMapper;
 import card.flash.service.FlashcardService;
-import card.flash.service.ImageData;
 import card.flash.service.FlashcardSetService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -18,7 +17,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/flashcards")
@@ -53,19 +51,7 @@ public class FlashcardController {
     public FlashcardDto addFlashcardToSet(@PathVariable @Positive Long setId,
                                           @Valid @RequestBody FlashcardRequest request,
                                           @AuthenticationPrincipal UserDetails userDetails) {
-        FlashcardSet set = flashcardSetService.getById(setId)
-                .orElseThrow(() -> new ResourceNotFoundException("Flashcard set not found"));
-        requireOwner(set, userDetails);
-        Flashcard card = new Flashcard();
-        card.setTerm(request.term());
-        card.setDefinition(request.definition());
-        card.setExampleSentence(request.exampleSentence());
-        card.setImage(ImageData.validate(request.image()));
-        card.setClientId(request.clientId() == null ? UUID.randomUUID().toString() : request.clientId());
-        card.setSet(set);
-        card.setPosition(set.getCards().stream().mapToInt(Flashcard::getPosition).max().orElse(-1) + 1);
-
-        return FlashcardMapper.toDto(flashcardService.save(card));
+        return FlashcardMapper.toDto(flashcardSetService.appendCard(setId, userDetails.getUsername(), request));
     }
 
 

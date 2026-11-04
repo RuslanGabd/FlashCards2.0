@@ -4,6 +4,7 @@ package card.flash.service;
 import card.flash.entity.FlashcardSet;
 import card.flash.entity.User;
 import card.flash.repository.FlashcardSetRepository;
+import card.flash.repository.FlashcardRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,13 +15,16 @@ import card.flash.entity.Flashcard;
 import card.flash.exception.ResourceNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
+import card.flash.validation.FlashcardLimits;
 
 @Service
 public class FlashcardSetService {
     private final FlashcardSetRepository flashcardSetRepository;
+    private final FlashcardRepository flashcardRepository;
 
-    public FlashcardSetService(FlashcardSetRepository flashcardSetRepository) {
+    public FlashcardSetService(FlashcardSetRepository flashcardSetRepository, FlashcardRepository flashcardRepository) {
         this.flashcardSetRepository = flashcardSetRepository;
+        this.flashcardRepository = flashcardRepository;
     }
 
     public Page<FlashcardSet> searchPublic(String query, Pageable page) {
@@ -59,16 +63,47 @@ public class FlashcardSetService {
 
     @Transactional
     public FlashcardSet update(Long id, String username, FlashcardSetRequest request) {
-        FlashcardSet set = getById(id).orElseThrow(() -> new ResourceNotFoundException("Flashcard set not found"));
-        if (!set.getOwner().getUsername().equals(username)) throw new AccessDeniedException("You can edit only your own sets");
+        FlashcardSet set = lockedOwnedSet(id, username);
         applyRequest(set, request);
         return flashcardSetRepository.save(set);
     }
 
+    @Transactional
+    public Flashcard appendCard(Long id, String username, FlashcardRequest request) {
+        FlashcardSet set = lockedOwnedSet(id, username);
+        String image = ImageData.validate(request.image());
+        long imageCharacters = set.getCards().stream().map(Flashcard::getImage)
+                .filter(Objects::nonNull).mapToLong(String::length).sum() + image.length();
+        FlashcardLimits.validate(set.getCards().size() + 1, imageCharacters);
+
+        Flashcard card = new Flashcard();
+        card.setClientId(request.clientId() == null ? UUID.randomUUID().toString() : request.clientId());
+        card.setTerm(request.term());
+        card.setDefinition(request.definition());
+        card.setExampleSentence(request.exampleSentence());
+        card.setImage(image);
+        card.setPosition(set.getCards().stream().mapToInt(Flashcard::getPosition).max().orElse(-1) + 1);
+        card.setSet(set);
+        set.getCards().add(card);
+        return flashcardRepository.saveAndFlush(card);
+    }
+
+    private FlashcardSet lockedOwnedSet(Long id, String username) {
+        FlashcardSet set = flashcardSetRepository.findLockedById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Flashcard set not found"));
+        if (!set.getOwner().getUsername().equals(username)) {
+            throw new AccessDeniedException("You can edit only your own sets");
+        }
+        return set;
+    }
+
     private void applyRequest(FlashcardSet set, FlashcardSetRequest request) {
+        if (request.cards() == null || request.cards().stream().anyMatch(Objects::isNull)) {
+            throw new IllegalArgumentException("Cards must not contain null elements");
+        }
         long totalImageSize = request.cards().stream().map(FlashcardRequest::image)
                 .filter(Objects::nonNull).mapToLong(String::length).sum();
-        if (totalImageSize > 2_000_000) throw new IllegalArgumentException("Images in one set must total less than 2 MB");
+        FlashcardLimits.validate(request.cards().size(), totalImageSize);
         if (request.diagram() == null) {
             set.setDiagramName(null); set.setDiagramData(null);
         } else {
@@ -80,11 +115,6 @@ public class FlashcardSetService {
         set.setPublic(request.publicSet());
         if (request.language() != null || set.getLanguage() == null || set.getLanguage().isBlank()) {
             set.setLanguage(normalizeLanguage(request.language()));
-        }
-
-        if (request.cards() == null) {
-            set.getCards().clear();
-            return;
         }
 
         Map<String, Flashcard> existingByClientId = new HashMap<>();

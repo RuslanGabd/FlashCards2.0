@@ -11,8 +11,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 
 public interface FlashcardSetRepository extends JpaRepository<FlashcardSet, Long> {
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select s from FlashcardSet s where s.id = :id")
+    Optional<FlashcardSet> findLockedById(Long id);
+
     List<FlashcardSet> findByOwner(User owner);
     List<FlashcardSet> findByIsPublicTrue();
     @EntityGraph(attributePaths = "owner")
