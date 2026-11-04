@@ -4,6 +4,8 @@
 
 `JWT_SECRET` and `DB_PASSWORD` have no working production defaults. The local initializer creates random credentials in an ignored `.env` with restrictive file permissions and never overwrites an existing file. Docker excludes `.env` from its build context. Production credentials must be supplied through the deployment platform and must differ from local values.
 
+`TRUSTED_PROXY_CIDRS` is empty by default. Only a matching immediate peer may supply a single numeric `CF-Connecting-IP` for rate limiting; arbitrary `X-Forwarded-For` values are ignored. Configure this narrowly for cloudflared and keep the origin port private. A public proxy that forwards unverified client headers must not be treated as a verified Cloudflare boundary. See the deployment examples in README.
+
 Before deploying this revision, revoke/reissue any DeepSeek, Yandex and Forvo keys that were used from earlier repository versions. Rotate the JWT signing key and any reused database/account passwords. If the removed database dump contained a real account, its owner must change that password too. Historical Git commits still exist; removing a file does not revoke a key or erase history. No history rewrite or force push is performed by this change.
 
 Provider keys are optional. Leave them unset until replacements are configured securely. Never send secret values in chat or paste them into commits/issues. The project cannot revoke credentials in a provider account on the owner's behalf.

@@ -65,6 +65,8 @@ java -jar target/flash-0.0.1-SNAPSHOT.jar
 
 The application listens on **8080**. Static files in the checkout take priority for frontend development; the packaged classpath copy is used when `front/` is absent. Rebuild the JAR after Java changes or before deployment. Create sample collections through the UI; no user database dump is required.
 
+For IntelliJ IDEA, run `card.flash.FlashApplication` with the repository root as the working directory. In **Run → Edit Configurations → Environment variables**, supply `DB_URL` (if different from the default), `DB_USER`, `DB_PASSWORD` and `JWT_SECRET` from your private configuration. Running directly from the IDE does not load `.env` automatically. Use the password of the existing PostgreSQL role; generating a new `.env` does not change that role's password.
+
 ## Configuration
 
 `.env` and local secrets are ignored by Git and excluded from Docker's build context. Generate values with the helper for local development; production values belong in your deployment platform's secret configuration. Do not paste credentials into issues, logs or documentation.
@@ -75,6 +77,7 @@ The application listens on **8080**. Static files in the checkout take priority 
 | `DB_URL` | Optional JDBC override; default `jdbc:postgresql://localhost:5432/quizlet_db` |
 | `JWT_SECRET` | Required base64-encoded random signing key, at least 32 decoded bytes; helper generates 64 bytes |
 | `APP_PORT` | Optional host port for the application container; default 8080 |
+| `TRUSTED_PROXY_CIDRS` | Optional comma-separated immediate proxy IPs/CIDRs allowed to supply `CF-Connecting-IP`; empty by default |
 | `DEEPSEEK_API_KEY` | Optional AI card and sentence generation |
 | `YANDEX_DICTIONARY_API_KEY` | Optional dictionary lookup |
 | `FORVO_API_KEY` | Optional pronunciation lookup; browser speech remains available |
@@ -99,7 +102,7 @@ python3 scripts/check.py e2e
 
 `check.py` creates its own database, preserves the development database, and removes its test database/process on completion or failure. It requires Docker/Compose and `.env`. PostgreSQL checks build the JAR; run them or `verify` before E2E after backend changes. For an already installed system Chromium, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to its executable. Failure diagnostics are written under ignored `artifacts/` and `test-results/`.
 
-CI runs H2, PostgreSQL and Chromium checks and builds the Docker application image. The browser suite covers draft recovery, collection navigation, image/diagram persistence in a new session, failed saves, login/logout, paginated search, suggestions, timers, card ordering and responsive layouts. See the dated [local verification results](docs/VERIFICATION.md).
+CI runs H2, PostgreSQL and Chromium checks and builds the Docker application image. The browser suite covers registration, draft recovery, collection navigation, image/diagram persistence, failed saves/loads, two editor tabs, unavailable browser storage, explicit AI/local extraction, login/logout, paginated search, suggestions, timers, card ordering and responsive layouts. See the [latest review fixes and test results](docs/EMPLOYER-REVIEW-FIXES.md) and the earlier [local verification results](docs/VERIFICATION.md).
 
 ## API essentials
 
@@ -130,10 +133,24 @@ List endpoints accept `page` (zero-based), `size` (1–100, default 24), and `q`
 
 1. Supply unique production `JWT_SECRET` and database credentials securely. Rotate previously published credentials; do not reuse local development secrets.
 2. Build and run the Docker application, or run the packaged JAR with the environment configured. The JAR contains the frontend.
-3. Terminate HTTPS at a trusted reverse proxy pointing to the application. CORS allows localhost development and `wordsup.eu`/`www.wordsup.eu`; review origins for another host. Authentication limits use the server-observed remote address; do not trust arbitrary forwarding headers.
+3. Terminate HTTPS at a trusted reverse proxy or Cloudflare Tunnel pointing to the application. CORS allows localhost development and `wordsup.eu`/`www.wordsup.eu`; review origins for another host. Configure trusted client-address handling as described below.
 4. Back up PostgreSQL before upgrades, apply the new application/migrations, and verify `/api/sets/public` plus a real sign-in/save flow. Code pushes and environment configuration saves do not deploy the public site by themselves.
 
 Changing the JWT signing key revokes old sessions. An existing database upgrades through additive Flyway migrations; the unsafe password-reset endpoints remain disabled regardless of old reset records. Secrets previously present in Git must be revoked at their providers; deleting code does not revoke a credential.
+
+### Cloudflare Tunnel and client rate limits
+
+By default the limiter uses the immediate socket peer. Forwarding headers are ignored until that peer is explicitly trusted. For native `cloudflared` running on the **same computer** as the Java application, set this in the application's environment (or `.env` when using the launcher):
+
+```dotenv
+TRUSTED_PROXY_CIDRS=127.0.0.1/32,::1/128
+```
+
+The limiter then uses a valid single IP from `CF-Connecting-IP`, so visitors have independent login limits. Malformed values fall back to the socket peer; equivalent IPv6 spellings use the same bucket. `X-Forwarded-For` is not used.
+
+In Docker, the immediate peer may be a bridge gateway or another container rather than loopback. Configure the actual trusted connector/gateway address narrowly, for example as an individual `/32` or `/128`; do not trust all networks. A trusted proxy must preserve Cloudflare's verified header and prevent untrusted direct clients from supplying it. An ordinary public reverse proxy must strip unverified client headers before forwarding. The default server forwarding strategy remains `none`; don't add a generic forwarding filter that replaces the socket address from arbitrary headers.
+
+Keep the application port private to the connector, as in the loopback-only Compose configuration. If you do not use Cloudflare client headers, leave `TRUSTED_PROXY_CIDRS` empty. Limits remain in memory per application instance; a distributed deployment needs a shared limiter.
 
 ## Structure and tradeoffs
 

@@ -41,15 +41,17 @@ public class ExternalApiRateLimitFilter extends OncePerRequestFilter {
     private final AtomicLong lastCleanup = new AtomicLong();
     private final Clock clock;
     private final ObjectMapper objectMapper;
+    private final ClientAddressResolver clientAddresses;
 
     @Autowired
-    public ExternalApiRateLimitFilter(ObjectMapper objectMapper) {
-        this(objectMapper, Clock.systemUTC());
+    public ExternalApiRateLimitFilter(ObjectMapper objectMapper, ClientAddressResolver clientAddresses) {
+        this(objectMapper, Clock.systemUTC(), clientAddresses);
     }
 
-    ExternalApiRateLimitFilter(ObjectMapper objectMapper, Clock clock) {
+    ExternalApiRateLimitFilter(ObjectMapper objectMapper, Clock clock, ClientAddressResolver clientAddresses) {
         this.objectMapper = objectMapper;
         this.clock = clock;
+        this.clientAddresses = clientAddresses;
     }
 
     @Override
@@ -65,7 +67,7 @@ public class ExternalApiRateLimitFilter extends OncePerRequestFilter {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String principal = !prefix.startsWith("/api/auth/") && authentication != null && authentication.isAuthenticated()
                 ? authentication.getName()
-                : request.getRemoteAddr();
+                : clientAddresses.resolve(request);
         long now = clock.millis();
         String key = prefix + ':' + principal;
         Window window = windows.compute(key, (ignored, current) ->

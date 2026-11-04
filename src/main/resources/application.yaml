@@ -1,5 +1,6 @@
 server:
   port: 8080
+  forward-headers-strategy: none
 spring:
   servlet:
     multipart:
@@ -47,6 +48,8 @@ forvo:
     negative-ttl: PT24H
 
 app:
+  proxy:
+    trusted-cidrs: ${TRUSTED_PROXY_CIDRS:}
   jwt:
     secret: ${JWT_SECRET}
     ttl: PT1H

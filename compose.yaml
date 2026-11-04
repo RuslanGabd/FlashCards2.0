@@ -25,6 +25,7 @@ services:
       DB_USER: ${DB_USER:-quizlet_user}
       DB_PASSWORD: ${DB_PASSWORD:?Generate .env first}
       JWT_SECRET: ${JWT_SECRET:?Generate .env first}
+      TRUSTED_PROXY_CIDRS: ${TRUSTED_PROXY_CIDRS:-}
       YANDEX_DICTIONARY_API_KEY: ${YANDEX_DICTIONARY_API_KEY:-}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       FORVO_API_KEY: ${FORVO_API_KEY:-}

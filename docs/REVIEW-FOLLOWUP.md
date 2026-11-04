@@ -2,6 +2,8 @@
 
 This records changes following the local review of commit `3e3ec7b`. It is a checklist of implemented changes and remaining operational actions, not a claim that the public deployment has already been upgraded.
 
+The subsequent six issues found in the employer review of `0aee115` are tracked with their fixes and current test results in [the 2026-11-04 follow-up](EMPLOYER-REVIEW-FIXES.md).
+
 | Review topic | Result |
 | --- | --- |
 | Reset token returned publicly | Recovery endpoints disabled; regression test asserts no token |

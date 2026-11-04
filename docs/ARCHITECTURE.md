@@ -21,9 +21,11 @@ JWTs contain the account's session version. Each authenticated request validates
 
 ## Browser state
 
-`app-client.js` centralizes base URL, bearer requests, request timeouts and readable API failures. `draft-store.js` owns safe draft serialization and consumes `new=1` once. `study-navigation.js` propagates the chosen collection between modes. Images are resized/encoded in `app-images.js`; editor suggestions and study timers keep their state in separate closures.
+`app-client.js` centralizes base URL, bearer requests, request timeouts, safe optional storage access and readable API failures. `draft-store.js` owns safe draft serialization, typed preference reads and one-time `new=1` handling. Each editor tab keeps its own target IDs; legacy browser keys are used only when resuming an old draft, never as the live PUT target. Loading or failing to load a requested set blocks editing/saving until a successful load or explicit retry. `study-navigation.js` propagates the chosen collection between modes. Images are resized/encoded in `app-images.js`; editor suggestions and study timers keep their state in separate closures.
 
 Guest sets stay in browser storage. Account saves go to PostgreSQL; a failed online save is reported as a failure and never silently converted into an account save. The draft remains available when browser storage permits. A fresh browser context can reopen saved image data, which is covered by E2E tests.
+
+Whole-set updates and single-card additions share collection limits and a pessimistic lock on the parent set. Concurrent additions cannot both take the last available place or bypass the image budget. Null list elements are rejected by DTO validation. This protects collection invariants; it does not implement conflict detection for two users editing the same set.
 
 ## Integrations and limits
 
@@ -31,10 +33,12 @@ HTTP clients use connect/request timeouts; dictionary lookup also has one overal
 
 Collection summaries are paginated and searched on the server. Owner associations are fetched with list queries to avoid one owner lookup per displayed collection. Large image/diagram payloads are omitted from summaries and are returned only when opening an individual collection/card list.
 
+AI failure leaves the generation dialog open with a readable error. Local word extraction is an explicit alternative, and unknown definitions stay empty so they must be completed before saving. Public flashcards remain usable when optional browser storage is unavailable; failed annotation storage is reported as unsaved.
+
 ## Limits
 
 - Password recovery awaits verified email delivery, neutral responses, one-time hashed reset tokens and revocation tests. It stays disabled until that entire flow exists.
-- Rate limits and browser storage are designed for a single application instance. Multiple instances need a shared limiter. Trusted reverse-proxy address handling must be configured for the deployment.
+- Rate limits and browser storage are designed for a single application instance. Multiple instances need a shared limiter. Cloudflare client IPs are accepted only from explicitly configured `TRUSTED_PROXY_CIDRS`; this deployment-specific boundary must match the actual connector and private application port.
 - Images are bounded data URLs in PostgreSQL to keep this application self-contained. Larger workloads should use object storage and explicit upload lifecycle/quota handling.
 - Collection edits currently use last-write-wins semantics; concurrent editing does not have an optimistic-lock conflict UI yet.
 - AI and dictionary services are optional and require the owner's provider accounts and valid keys. No automated test calls a paid provider.
